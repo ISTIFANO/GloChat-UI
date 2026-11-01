@@ -2,7 +2,7 @@
 Full purchase journey in a real browser against the REAL stack (no mock anywhere):
 web app -> Keycloak login -> gateway -> commerce (cart, quote, order) -> payment-service -> Stripe test mode.
 
-Usage:  python e2e/checkout.e2e.py [base_url]        (default http://localhost:4200)
+Usage:  python e2e/checkout.e2e.py [base_url]   (default: WEB_BASE_URL from the environment or .env)
 The demo user's password is read from the backend's infra/.env (MARKETCHAT_ENV_FILE overrides the path).
 Screenshots go to e2e/screenshots/ (git-ignored).
 """
@@ -12,7 +12,9 @@ import sys
 
 from playwright.sync_api import expect, sync_playwright
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4200"
+from settings import web_base_url
+
+BASE = web_base_url()
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "screenshots")
 ENV_FILE = os.environ.get("MARKETCHAT_ENV_FILE", os.path.join(HERE, "..", "..", "marketchat", "infra", ".env"))
