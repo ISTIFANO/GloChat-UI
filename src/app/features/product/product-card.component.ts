@@ -1,10 +1,14 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { ProductCard } from '../../core/api/contracts';
+import { MarketApi } from '../../core/api/market-api';
 import { I18n } from '../../core/i18n/i18n.service';
+import { FoodImageComponent } from '../../shared/ui/food-image.component';
 
 @Component({
   selector: 'mc-product-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [RouterLink, FoodImageComponent],
   host: { class: 'block' },
   template: `
     <article
@@ -19,12 +23,9 @@ import { I18n } from '../../core/i18n/i18n.service';
         (click)="open.emit(card().productId)"
         [attr.aria-label]="card().name"
       >
-        <span class="pointer-events-none absolute -end-6 -top-8 size-32 rounded-full bg-white/25 blur-2xl"></span>
-        <span
-          class="absolute inset-0 grid place-items-center text-[4.25rem] drop-shadow-[0_10px_18px_rgba(0,0,0,0.18)] transition-transform duration-300 group-hover:scale-110 group-hover:-rotate-3"
-          aria-hidden="true"
-          >{{ card().visual.emoji }}</span
-        >
+        <mc-food-image class="size-full transition-transform duration-500 group-hover:scale-105"
+                       [path]="card().imageUrl" [visual]="card().visual" [alt]="card().name" />
+        <span class="pointer-events-none absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/25 to-transparent"></span>
         <span class="absolute start-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-xs font-semibold text-ink backdrop-blur">
           <svg viewBox="0 0 20 20" class="size-3.5" aria-hidden="true"><path fill="currentColor" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm.75 4.5v3.19l2.28 2.28-1.06 1.06-2.72-2.72V6.5h1.5Z"/></svg>
           <span dir="ltr">{{ card().etaText }}</span>
@@ -35,13 +36,19 @@ import { I18n } from '../../core/i18n/i18n.service';
       </button>
 
       <div class="flex flex-1 flex-col gap-1 p-3.5">
-        <h3 class="line-clamp-2 min-h-[2.5rem] text-[0.92rem] font-bold leading-tight">{{ card().name }}</h3>
-        <p class="flex items-center gap-1.5 text-xs text-muted">
-          <span aria-hidden="true">{{ card().merchant.emoji }}</span>
-          <span class="line-clamp-1">{{ card().merchant.name }}</span>
+        <h3 dir="auto" class="line-clamp-2 min-h-[2.5rem] text-start text-[0.92rem] font-bold leading-tight">{{ card().name }}</h3>
+        <a [routerLink]="['/m', card().merchant.id]"
+           class="flex min-w-0 items-center gap-1.5 text-xs text-muted transition hover:text-iris-600"
+           [attr.aria-label]="card().merchant.name">
+          @if (api.mediaUrl(card().merchant.logoUrl); as logo) {
+            <img [src]="logo" alt="" class="size-4 shrink-0 rounded-[5px]" />
+          } @else {
+            <span aria-hidden="true">{{ card().merchant.emoji }}</span>
+          }
+          <span class="truncate font-medium">{{ card().merchant.name }}</span>
           <span aria-hidden="true">·</span>
           <span class="shrink-0" dir="ltr">{{ card().distanceKm }} km</span>
-        </p>
+        </a>
         <div class="mt-auto flex items-center justify-between gap-2 pt-2">
           <div class="min-w-0">
             <p class="whitespace-nowrap text-[1.02rem] font-extrabold tracking-tight" dir="ltr">{{ i18n.price(card().price) }}</p>
@@ -63,6 +70,7 @@ import { I18n } from '../../core/i18n/i18n.service';
 })
 export class ProductCardComponent {
   readonly i18n = inject(I18n);
+  readonly api = inject(MarketApi);
   readonly card = input.required<ProductCard>();
   readonly open = output<string>();
 }
