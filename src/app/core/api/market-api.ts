@@ -6,7 +6,7 @@ import { ApiError, ApiProblem, GeoLocation, MerchantPage, ProductCard, ProductDe
 
 /**
  * Client of the MarketChat api-gateway. Every call goes through the gateway (never directly to a service);
- * catalog endpoints are public, the next ones (cart, checkout) will add the Keycloak bearer token.
+ * catalog endpoints are public; cart/checkout/orders (ShopApi) get the Keycloak bearer from the auth interceptor.
  */
 @Injectable({ providedIn: 'root' })
 export class MarketApi {
@@ -36,14 +36,15 @@ export class MarketApi {
     return /^https?:\/\//.test(path) ? path : `${this.base}${path}`;
   }
 
-  private async call<T>(request: import('rxjs').Observable<T>): Promise<T> {
+  /** Maps HTTP failures to ApiError with the backend's stable code (shared with ShopApi). */
+  async call<T>(request: import('rxjs').Observable<T>): Promise<T> {
     try {
       return await firstValueFrom(request);
     } catch (e) {
       if (e instanceof HttpErrorResponse) {
         if (e.status === 0) throw new ApiError('NETWORK_ERROR', 0, 'Gateway unreachable');
         const problem = (e.error ?? {}) as ApiProblem;
-        throw new ApiError(problem.code ?? `HTTP_${e.status}`, e.status, problem.detail);
+        throw new ApiError(problem.code ?? `HTTP_${e.status}`, e.status, problem.detail, problem);
       }
       throw e;
     }

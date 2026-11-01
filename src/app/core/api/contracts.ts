@@ -118,6 +118,7 @@ export interface ApiProblem {
   detail?: string;
   code?: string;
   fields?: string[];
+  [extra: string]: unknown;
 }
 
 export class ApiError extends Error {
@@ -125,8 +126,140 @@ export class ApiError extends Error {
     public readonly code: string,
     public readonly status: number,
     detail?: string,
+    /** full RFC 7807 body (e.g. PRICE_CHANGED carries the new quote, conflicts carry ids) */
+    public readonly problem: ApiProblem | null = null,
   ) {
     super(detail ?? code);
     this.name = 'ApiError';
   }
+}
+
+// ───────────── cart (GET /api/cart) ─────────────
+export type PaymentMethod = 'CASH' | 'CARD';
+
+export interface CartSelection {
+  groupId: string;
+  group: string;
+  valueId: string;
+  label: string;
+  priceDelta: number;
+}
+
+export interface CartLine {
+  lineId: string;
+  productId: string;
+  name: string | null;
+  imageUrl: string | null;
+  emoji: string | null;
+  quantity: number;
+  note: string | null;
+  selections: CartSelection[];
+  unitPrice: number;
+  lineTotal: number;
+  available: boolean;
+  unavailableReason: string | null;
+}
+
+export interface CartIssue {
+  code: string;
+  missing: number | null;
+  lineId: string | null;
+}
+
+export interface CartDelivery {
+  label: string;
+  line: string;
+  city: string;
+  lat: number;
+  lng: number;
+  distanceKm: number | null;
+  inZone: boolean | null;
+  fee: number | null;
+  etaText: string | null;
+}
+
+export interface CartView {
+  cartId: string | null;
+  version: number;
+  currency: string;
+  merchant: { id: string; name: string; emoji: string; logoUrl: string | null; open: boolean } | null;
+  lines: CartLine[];
+  itemCount: number;
+  subtotal: number;
+  delivery: CartDelivery | null;
+  minimumOrder: number | null;
+  total: number;
+  paymentMethod: PaymentMethod | null;
+  acceptedPaymentMethods: PaymentMethod[];
+  issues: CartIssue[];
+}
+
+export type CartOperation =
+  | { op: 'ADD'; productId: string; quantity: number; optionValueIds: string[]; note?: string }
+  | { op: 'UPDATE'; lineId: string; quantity?: number; note?: string }
+  | { op: 'REMOVE'; lineId: string }
+  | { op: 'CLEAR' };
+
+export interface AddressInput {
+  label: string;
+  line: string;
+  city: string;
+  lat: number;
+  lng: number;
+}
+
+export interface SavedAddress extends AddressInput {
+  id: string;
+}
+
+// ───────────── checkout ─────────────
+export interface QuoteLine {
+  productId: string;
+  name: string;
+  imageUrl: string | null;
+  emoji: string | null;
+  unitPrice: number;
+  quantity: number;
+  lineTotal: number;
+  note: string | null;
+  selections: { group: string; label: string; priceDelta: number }[];
+}
+
+export interface QuoteView {
+  quoteId: string;
+  confirmationToken: string;
+  expiresAt: string;
+  merchant: { id: string; name: string; emoji: string; logoUrl: string | null };
+  lines: QuoteLine[];
+  delivery: { label: string; line: string; city: string; distanceKm: number | null; etaText: string | null };
+  subtotal: number;
+  deliveryFee: number;
+  discount: number;
+  total: number;
+  currency: string;
+  paymentMethod: PaymentMethod;
+}
+
+// ───────────── orders ─────────────
+export type OrderStatus = 'AWAITING_PAYMENT' | 'PLACED' | 'ACCEPTED' | 'PREPARING' | 'ON_THE_WAY' | 'DELIVERED' | 'CANCELED';
+
+export interface OrderView {
+  id: string;
+  number: string;
+  status: OrderStatus;
+  paymentMethod: PaymentMethod;
+  paymentStatus: 'PENDING' | 'PAID' | 'FAILED' | 'EXPIRED' | 'CASH_ON_DELIVERY';
+  paymentUrl: string | null;
+  merchant: { id: string; name: string; emoji: string; logoUrl: string | null };
+  lines: QuoteLine[];
+  subtotal: number;
+  deliveryFee: number;
+  discount: number;
+  total: number;
+  currency: string;
+  delivery: { label: string; line: string; city: string };
+  etaText: string;
+  createdAt: string;
+  cancellable: boolean;
+  history: { status: OrderStatus; at: string; actor: string }[];
 }
