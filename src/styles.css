@@ -1,0 +1,102 @@
+/*
+ * MarketChat design system — original identity (not a copy of any existing brand).
+ * Iris violet = the assistant / primary actions. Zest lime = highlights, savings, success.
+ * Warm canvas keeps food imagery appetising; ink is a deep violet-black, never pure #000.
+ */
+@import "tailwindcss";
+@import "@fontsource-variable/plus-jakarta-sans";
+@import "@fontsource/ibm-plex-sans-arabic/400.css";
+@import "@fontsource/ibm-plex-sans-arabic/600.css";
+@import "@fontsource/ibm-plex-sans-arabic/700.css";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans Variable", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Plus Jakarta Sans Variable", system-ui, sans-serif;
+
+  --color-ink: #16131f;
+  --color-ink-soft: #3a3646;
+  --color-muted: #6e6a7c;
+  --color-line: #ebe7df;
+  --color-canvas: #f7f5f0;
+  --color-surface: #ffffff;
+
+  --color-iris-50: #f2efff;
+  --color-iris-100: #e4ddff;
+  --color-iris-200: #c9bcff;
+  --color-iris-400: #8f73ff;
+  --color-iris-500: #5b3df5;
+  --color-iris-600: #4a2ee0;
+  --color-iris-700: #3a21b8;
+
+  --color-zest-300: #e2fb8f;
+  --color-zest-400: #c8f23b;
+  --color-zest-600: #7fa313;
+
+  --color-ember-500: #ff6b4a;
+  --color-success: #12a150;
+
+  --radius-card: 1.25rem;
+  --radius-sheet: 1.75rem;
+
+  --shadow-soft: 0 8px 24px -8px rgb(22 19 31 / 0.12);
+  --shadow-lift: 0 18px 40px -12px rgb(22 19 31 / 0.22);
+  --shadow-glow: 0 10px 30px -8px rgb(91 61 245 / 0.45);
+
+  --ease-snap: cubic-bezier(0.2, 0.9, 0.1, 1);
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  [dir="rtl"] body,
+  [dir="rtl"] {
+    font-family: var(--font-arabic);
+  }
+  button {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-iris-400);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-iris-500 px-5 py-3 font-semibold text-white
+      shadow-glow transition-[transform,background-color] duration-150 hover:bg-iris-600 active:scale-[0.97]
+      disabled:cursor-not-allowed disabled:bg-iris-200 disabled:shadow-none;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-surface px-4 py-2.5 font-semibold text-ink
+      ring-1 ring-line transition active:scale-[0.97] hover:ring-iris-200;
+  }
+  .chip {
+    @apply inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface px-3.5 py-2 text-sm font-medium text-ink-soft
+      ring-1 ring-line transition hover:ring-iris-200 active:scale-[0.97];
+  }
+  .card {
+    @apply rounded-[var(--radius-card)] bg-surface shadow-soft ring-1 ring-line/70;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
