@@ -104,3 +104,56 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ───────────── GloChat logo loader (shared with the boot splash in index.html) ───────────── */
+.gc-loader .gc-mark {
+  animation: gc-hop 1.2s cubic-bezier(.45, 0, .25, 1) infinite;
+  transform-origin: 50% 92%;
+  filter: drop-shadow(0 10px 18px rgb(91 61 245 / .35));
+}
+.gc-loader .gc-g {
+  stroke-dasharray: 48;
+  animation: gc-draw 1.2s ease-in-out infinite;
+}
+.gc-loader .gc-spark, .gc-loader .gc-spark-glow {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: gc-pulse 1.2s ease-in-out infinite;
+}
+.gc-loader .gc-shadow {
+  position: absolute; bottom: -10%; left: 30%; width: 40%; height: 9%;
+  border-radius: 50%; background: rgb(22 19 31 / .18);
+  animation: gc-shadow 1.2s cubic-bezier(.45, 0, .25, 1) infinite;
+}
+.gc-loader .gc-ripple {
+  position: absolute; inset: -12%; border-radius: 50%;
+  border: 2px solid rgb(143 115 255 / .45);
+  animation: gc-ripple 1.8s ease-out infinite;
+}
+@keyframes gc-hop {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  12% { transform: translateY(0) scale(1.06, .92); }
+  45% { transform: translateY(-18%) scale(.97, 1.04); }
+  75% { transform: translateY(0) scale(1.04, .95); }
+}
+@keyframes gc-draw {
+  0% { stroke-dashoffset: 48; }
+  45%, 70% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -48; }
+}
+@keyframes gc-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  45% { transform: scale(1.35); opacity: .75; }
+}
+@keyframes gc-shadow {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  45% { transform: scale(.6); opacity: .45; }
+}
+@keyframes gc-ripple {
+  0% { transform: scale(.7); opacity: .9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gc-loader .gc-mark, .gc-loader .gc-g, .gc-loader .gc-spark, .gc-loader .gc-spark-glow,
+  .gc-loader .gc-shadow, .gc-loader .gc-ripple { animation: none; }
+}

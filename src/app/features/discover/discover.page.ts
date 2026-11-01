@@ -1,11 +1,13 @@
 import {
   ChangeDetectionStrategy, Component, ElementRef, Injector, afterNextRender, inject, signal, viewChild,
 } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 import { ApiError, ProductCard } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
 import { I18n } from '../../core/i18n/i18n.service';
+import { LoginPrompt } from '../../core/auth/login-prompt.service';
 import { Motion } from '../../shared/motion/motion.service';
 import { ProductCardComponent } from '../product/product-card.component';
 import { ProductSheetComponent } from '../product/product-sheet.component';
@@ -13,14 +15,14 @@ import { parseQuery } from './query-parser';
 
 interface Suggestion {
   key: string;
-  emoji: string;
+  icon: string;
   query: string;
 }
 
 @Component({
   selector: 'mc-discover',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, ProductCardComponent, ProductSheetComponent],
+  imports: [IconComponent, FormsModule, ProductCardComponent, ProductSheetComponent],
   template: `
     <section #hero class="px-5 pb-4 pt-6">
       <p data-hero class="inline-flex items-center gap-2 rounded-full bg-zest-300/70 px-3 py-1 text-xs font-bold text-ink">
@@ -52,7 +54,7 @@ interface Suggestion {
       <div data-hero class="no-scrollbar -mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1">
         @for (s of suggestions; track s.key) {
           <button type="button" class="chip" (click)="useSuggestion(s)">
-            <span aria-hidden="true">{{ s.emoji }}</span>{{ i18n.t(s.key) }}
+            <mc-icon [name]="s.icon" class="size-5" />{{ i18n.t(s.key) }}
           </button>
         }
       </div>
@@ -74,7 +76,7 @@ interface Suggestion {
         </div>
       } @else if (error()) {
         <div class="card flex flex-col items-center gap-2 p-8 text-center">
-          <span class="text-4xl" aria-hidden="true">📡</span>
+          <span class="grid size-14 place-items-center rounded-2xl bg-ember-500/10 text-ember-500"><mc-icon name="wifi-off" class="size-7" /></span>
           <p class="text-sm font-medium text-ink-soft">{{ error() }}</p>
           <button type="button" class="btn-ghost mt-2" (click)="retry()">↻</button>
         </div>
@@ -91,7 +93,7 @@ interface Suggestion {
           </div>
         } @else {
           <div class="card flex flex-col items-center gap-2 p-8 text-center">
-            <span class="text-5xl" aria-hidden="true">🍽️</span>
+            <span class="grid size-16 place-items-center rounded-[1.4rem] bg-iris-50 text-iris-600"><mc-icon name="cloche" class="size-8" /></span>
             <p class="font-bold">{{ i18n.t('results.empty.title') }}</p>
             <p class="text-sm text-muted">{{ i18n.t('results.empty.text') }}</p>
           </div>
@@ -105,6 +107,7 @@ interface Suggestion {
   `,
 })
 export class DiscoverPage {
+  private readonly prompt = inject(LoginPrompt);
   readonly i18n = inject(I18n);
   private readonly api = inject(MarketApi);
   private readonly motion = inject(Motion);
@@ -115,12 +118,12 @@ export class DiscoverPage {
 
   readonly location = { lat: environment.defaultLocation.lat, lng: environment.defaultLocation.lng };
   readonly suggestions: Suggestion[] = [
-    { key: 'chip.burger', emoji: '🍔', query: 'burger' },
-    { key: 'chip.sushi2', emoji: '🍣', query: 'sushi pour 2' },
-    { key: 'chip.healthy', emoji: '🥗', query: 'healthy sous 70' },
-    { key: 'chip.sweet', emoji: '🍰', query: 'dessert sucré' },
-    { key: 'chip.tajine', emoji: '🍲', query: 'tajine' },
-    { key: 'chip.coffee', emoji: '☕', query: 'café latte' },
+    { key: 'chip.burger', icon: 'burger', query: 'burger' },
+    { key: 'chip.sushi2', icon: 'sushi', query: 'sushi pour 2' },
+    { key: 'chip.healthy', icon: 'salad', query: 'healthy sous 70' },
+    { key: 'chip.sweet', icon: 'cake', query: 'dessert sucré' },
+    { key: 'chip.tajine', icon: 'tajine', query: 'tajine' },
+    { key: 'chip.coffee', icon: 'coffee', query: 'café latte' },
   ];
 
   text = '';
@@ -132,7 +135,10 @@ export class DiscoverPage {
   readonly openProductId = signal<string | null>(null);
 
   constructor() {
-    afterNextRender(() => this.motion.heroIn(this.hero().nativeElement));
+    afterNextRender(() => {
+      this.motion.heroIn(this.hero().nativeElement);
+      if (this.prompt.shouldWelcome()) setTimeout(() => this.prompt.shouldWelcome() && void this.prompt.ask('welcome'), 900);
+    });
   }
 
   useSuggestion(s: Suggestion): void {

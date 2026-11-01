@@ -1,4 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
+import { IllustrationComponent } from '../../shared/ui/illustration.component';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { Router, RouterLink } from '@angular/router';
 import { ApiError, QuoteView } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
@@ -16,7 +18,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 @Component({
   selector: 'mc-checkout-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FoodImageComponent],
+  imports: [IllustrationComponent, IconComponent, RouterLink, FoodImageComponent],
   template: `
     <div #root class="px-5 pb-44 pt-2">
       @if (quote(); as q) {
@@ -29,7 +31,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 
         <p data-reveal class="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold"
            [class]="secondsLeft() > 0 ? 'bg-zest-300 text-ink' : 'bg-ember-500/15 text-ember-500'" role="timer">
-          ⏱️ @if (secondsLeft() > 0) { {{ i18n.t('checkout.expires', { t: countdown() }) }} } @else { {{ i18n.t('checkout.expired') }} }
+          <mc-icon name="clock" class="size-4" /> @if (secondsLeft() > 0) { {{ i18n.t('checkout.expires', { t: countdown() }) }} } @else { {{ i18n.t('checkout.expired') }} }
         </p>
 
         @if (banner()) {
@@ -47,7 +49,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
           <ul class="divide-y divide-line">
             @for (l of q.lines; track $index) {
               <li class="flex items-center gap-3 p-3">
-                <mc-food-image class="size-12 shrink-0 rounded-xl" [path]="l.imageUrl" [visual]="{ emoji: l.emoji ?? '🍽️', from: '#efeaff', to: '#c9bcff' }" emojiSize="1.5rem" />
+                <mc-food-image class="size-12 shrink-0 rounded-xl" [path]="l.imageUrl" [visual]="{ emoji: '', from: '#efeaff', to: '#c9bcff' }" emojiSize="1.5rem" />
                 <div class="min-w-0 flex-1">
                   <p dir="auto" class="truncate text-sm font-bold"><span class="text-iris-600">{{ l.quantity }}×</span> {{ l.name }}</p>
                   @if (l.selections.length) {
@@ -63,7 +65,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
         <!-- delivery + payment -->
         <section data-reveal class="mt-4 grid gap-2">
           <div class="flex min-w-0 items-center gap-3 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-line/70">
-            <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-zest-300 text-lg" aria-hidden="true">📍</span>
+            <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-zest-300 text-ink" aria-hidden="true"><mc-icon name="pin" class="size-5" /></span>
             <div class="min-w-0 flex-1">
               <p class="text-xs text-muted">{{ i18n.t('checkout.deliverTo') }}</p>
               <p dir="auto" class="truncate text-sm font-bold">{{ q.delivery.label }} · {{ q.delivery.line }}, {{ q.delivery.city }}</p>
@@ -72,11 +74,11 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
           <div class="grid grid-cols-2 gap-2">
             <div class="min-w-0 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-line/70">
               <p class="text-xs text-muted">{{ i18n.t('checkout.eta') }}</p>
-              <p class="text-sm font-bold" dir="ltr">🛵 {{ q.delivery.etaText }}</p>
+              <p class="flex items-center gap-1.5 text-sm font-bold" dir="ltr"><mc-icon name="scooter" class="size-[1.1rem] text-iris-500" /> {{ q.delivery.etaText }}</p>
             </div>
             <div class="min-w-0 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-line/70">
               <p class="text-xs text-muted">{{ i18n.t('cart.payment') }}</p>
-              <p class="truncate text-sm font-bold">{{ q.paymentMethod === 'CARD' ? '💳 ' + i18n.t('cart.card') : '💵 ' + i18n.t('cart.cash') }}</p>
+              <p class="flex min-w-0 items-center gap-1.5 text-sm font-bold"><mc-icon [name]="q.paymentMethod === 'CARD' ? 'card' : 'cash'" class="size-[1.1rem] text-iris-500" /><span class="truncate">{{ q.paymentMethod === 'CARD' ? i18n.t('cart.card') : i18n.t('cart.cash') }}</span></p>
             </div>
           </div>
         </section>
@@ -108,7 +110,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
         </div>
       } @else {
         <div class="flex flex-col items-center gap-3 py-24 text-center">
-          <span class="text-5xl" aria-hidden="true">🧾</span>
+          <mc-illustration name="receipt" class="size-36" />
           <p class="font-semibold">{{ i18n.t('checkout.noQuote') }}</p>
           <a routerLink="/cart" class="btn-ghost">{{ i18n.t('cart.title') }}</a>
         </div>

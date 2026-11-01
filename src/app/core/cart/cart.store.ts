@@ -2,6 +2,7 @@ import { Injectable, computed, effect, inject, signal } from '@angular/core';
 import { ApiError, CartView, PaymentMethod, AddressInput } from '../api/contracts';
 import { ShopApi } from '../api/shop-api';
 import { AuthService } from '../auth/auth.service';
+import { LoginPrompt } from '../auth/login-prompt.service';
 import { I18n } from '../i18n/i18n.service';
 
 export interface AddRequest {
@@ -27,6 +28,7 @@ export class CartStore {
   private readonly api = inject(ShopApi);
   private readonly auth = inject(AuthService);
   private readonly i18n = inject(I18n);
+  private readonly prompt = inject(LoginPrompt);
 
   readonly view = signal<CartView | null>(null);
   readonly busy = signal(false);
@@ -55,9 +57,11 @@ export class CartStore {
 
   async add(req: AddRequest): Promise<AddResult> {
     if (!this.auth.loggedIn()) {
+      // kept in case the browser blocks the popup and we fall back to a full-page login
       sessionStorage.setItem(PENDING_ADD, JSON.stringify(req));
-      await this.auth.login(location.pathname + location.search, this.i18n.lang());
-      return { kind: 'login' };
+      const signedIn = await this.prompt.ask('cart');
+      if (!signedIn) return { kind: 'login' };
+      sessionStorage.removeItem(PENDING_ADD);
     }
     try {
       await this.run(() => this.api.apply([{ op: 'ADD', ...req }]));

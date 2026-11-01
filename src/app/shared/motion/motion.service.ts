@@ -75,7 +75,7 @@ export class Motion {
    * "Fly to cart": a copy of the product picture arcs from where it was added to the cart button,
    * shrinking as it goes, then the button bounces. Resolves when the flight ends.
    */
-  flyToCart(from: Element | null, emoji: string): Promise<void> {
+  flyToCart(from: Element | null): Promise<void> {
     const target = document.querySelector('[data-cart-button]');
     if (this.reduced || !from || !target) {
       this.pop(target);
@@ -99,7 +99,8 @@ export class Motion {
       copy.className = '';
       ghost.appendChild(copy);
     } else {
-      ghost.textContent = emoji;
+      ghost.innerHTML = '<svg viewBox="0 0 24 24" width="55%" height="55%" fill="none" stroke="#fff" stroke-width="1.8" '
+        + 'stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 12.5H6L5 8Z M9 8V6.5a3 3 0 0 1 6 0V8"/></svg>';
     }
     document.body.appendChild(ghost);
     const dx = b.left + b.width / 2 - (a.left + a.width / 2);

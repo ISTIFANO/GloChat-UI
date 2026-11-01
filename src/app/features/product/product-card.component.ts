@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { ProductCard } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
@@ -8,7 +9,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 @Component({
   selector: 'mc-product-card',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FoodImageComponent],
+  imports: [IconComponent, RouterLink, FoodImageComponent],
   host: { class: 'block' },
   template: `
     <article
@@ -43,7 +44,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
           @if (api.mediaUrl(card().merchant.logoUrl); as logo) {
             <img [src]="logo" alt="" class="size-4 shrink-0 rounded-[5px]" />
           } @else {
-            <span aria-hidden="true">{{ card().merchant.emoji }}</span>
+            <mc-icon name="store" class="size-4 text-iris-500" />
           }
           <span class="truncate font-medium">{{ card().merchant.name }}</span>
           <span aria-hidden="true">·</span>
@@ -52,7 +53,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
         <div class="mt-auto flex items-center justify-between gap-2 pt-2">
           <div class="min-w-0">
             <p class="whitespace-nowrap text-[1.02rem] font-extrabold tracking-tight" dir="ltr">{{ i18n.price(card().price) }}</p>
-            <p class="truncate text-[0.7rem] text-muted">🛵 <span dir="ltr">{{ i18n.price(card().deliveryFee) }}</span></p>
+            <p class="flex items-center gap-1 truncate text-[0.7rem] text-muted"><mc-icon name="scooter" class="size-3.5" /> <span dir="ltr">{{ i18n.price(card().deliveryFee) }}</span></p>
           </div>
           <button
             type="button"

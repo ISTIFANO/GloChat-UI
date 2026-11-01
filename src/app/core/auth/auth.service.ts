@@ -10,6 +10,8 @@ interface Tokens {
   expiresAt: number;
 }
 
+export type LoginProvider = 'google' | 'email';
+
 interface PendingLogin {
   verifier: string;
   state: string;
@@ -20,7 +22,8 @@ const TOKENS_KEY = 'mc.auth';
 const PENDING_KEY = 'mc.auth.pending';
 
 /**
- * Keycloak login with Authorization Code + PKCE (public client "marketchat-app", no secret in the browser).
+ * Keycloak login with Authorization Code + PKCE (public client "marketchat-app", no secret in the browser),
+ * in a popup so the customer stays on the shop (full-page redirect only as a fallback).
  * Tokens live in sessionStorage: they survive the Stripe redirect in the same tab and disappear with it.
  */
 @Injectable({ providedIn: 'root' })
@@ -43,14 +46,67 @@ export class AuthService {
     return `${location.origin}/auth/callback`;
   }
 
-  /** Sends the browser to the Keycloak login page; comes back to {@link handleCallback}. */
-  async login(returnTo: string = location.pathname + location.search, lang = 'fr'): Promise<void> {
+  get popupRedirectUri(): string {
+    return `${location.origin}/auth/popup`;
+  }
+
+  /** Full-page login (fallback when popups are blocked); comes back to {@link handleCallback}. */
+  async login(returnTo: string = location.pathname + location.search, lang = 'fr', provider?: LoginProvider): Promise<void> {
+    location.assign(await this.authorizeUrl(this.redirectUri, returnTo, lang, provider));
+  }
+
+  /**
+   * Login in a small popup: the customer never leaves the page they are on. With provider "google" Keycloak
+   * jumps straight to Google (kc_idp_hint) instead of showing its own form; if the Google identity provider
+   * isn't configured, Keycloak simply shows its form. Resolves true once signed in, false if closed/failed.
+   * Falls back to a full-page login if the browser blocks the popup.
+   */
+  async loginWithPopup(lang = 'fr', provider?: LoginProvider): Promise<boolean> {
+    const url = await this.authorizeUrl(this.popupRedirectUri, location.pathname + location.search, lang, provider);
+    const w = 480, h = 680;
+    const left = Math.max(0, window.screenX + (window.outerWidth - w) / 2);
+    const top = Math.max(0, window.screenY + (window.outerHeight - h) / 2);
+    const popup = window.open(url, 'glochat-login', `popup=yes,width=${w},height=${h},left=${left},top=${top}`);
+    if (!popup) {
+      location.assign(url.replace(encodeURIComponent(this.popupRedirectUri), encodeURIComponent(this.redirectUri)));
+      return false;
+    }
+    return new Promise<boolean>((resolve) => {
+      let settled = false;
+      const finish = (ok: boolean) => {
+        if (settled) return;
+        settled = true;
+        window.removeEventListener('message', onMessage);
+        clearInterval(watch);
+        resolve(ok);
+      };
+      const onMessage = (event: MessageEvent) => {
+        const data = event.data as { type?: string; search?: string } | null;
+        if (event.origin !== location.origin || data?.type !== 'glochat-auth') return;
+        this.exchange(new URLSearchParams(data.search ?? ''), this.popupRedirectUri)
+          .then(() => finish(true))
+          .catch(() => finish(false));
+      };
+      window.addEventListener('message', onMessage);
+      // the user closed the popup without signing in (grace period: the message may still be on its way)
+      const watch = setInterval(() => {
+        if (popup.closed) setTimeout(() => finish(this.loggedIn()), 600);
+      }, 400);
+    });
+  }
+
+  /** Exchanges the authorization code for tokens; returns where the user was going. */
+  async handleCallback(query: URLSearchParams, redirectUri = this.redirectUri): Promise<string> {
+    return this.exchange(query, redirectUri);
+  }
+
+  private async authorizeUrl(redirectUri: string, returnTo: string, lang: string, provider?: LoginProvider): Promise<string> {
     const verifier = randomVerifier();
     const state = randomVerifier(16);
     sessionStorage.setItem(PENDING_KEY, JSON.stringify({ verifier, state, returnTo } satisfies PendingLogin));
     const params = new URLSearchParams({
       client_id: environment.keycloak.clientId,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri,
       response_type: 'code',
       scope: 'openid profile email',
       state,
@@ -58,11 +114,11 @@ export class AuthService {
       code_challenge_method: 'S256',
       ui_locales: lang,
     });
-    location.assign(`${this.oidc}/auth?${params}`);
+    if (provider === 'google') params.set('kc_idp_hint', 'google');
+    return `${this.oidc}/auth?${params}`;
   }
 
-  /** Exchanges the authorization code for tokens; returns where the user was going. */
-  async handleCallback(query: URLSearchParams): Promise<string> {
+  private async exchange(query: URLSearchParams, redirectUri: string): Promise<string> {
     const pending = JSON.parse(sessionStorage.getItem(PENDING_KEY) ?? 'null') as PendingLogin | null;
     sessionStorage.removeItem(PENDING_KEY);
     const error = query.get('error');
@@ -73,7 +129,7 @@ export class AuthService {
     await this.tokenRequest({
       grant_type: 'authorization_code',
       code,
-      redirect_uri: this.redirectUri,
+      redirect_uri: redirectUri,
       client_id: environment.keycloak.clientId,
       code_verifier: pending.verifier,
     });

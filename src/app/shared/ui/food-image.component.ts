@@ -1,20 +1,23 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { IconComponent } from './icon.component';
 import { ProductVisual } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
 
 /**
  * Product / cover photo with graceful fallback: while loading it shows the brand gradient,
- * and if the photo is missing or fails, the emoji visual stays (never a broken image icon).
+ * and if the photo is missing or fails, a cloche icon on the gradient stays (never a broken image icon).
  */
 @Component({
   selector: 'mc-food-image',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [IconComponent],
   host: { class: 'relative block overflow-hidden' },
   template: `
     <div class="absolute inset-0 grid place-items-center"
          [style.background]="'linear-gradient(135deg,' + visual().from + ',' + visual().to + ')'">
       @if (!loaded()) {
-        <span class="drop-shadow-[0_10px_18px_rgba(0,0,0,0.18)]" [style.font-size]="emojiSize()" aria-hidden="true">{{ visual().emoji }}</span>
+        <mc-icon name="cloche" class="text-white/90 drop-shadow-[0_8px_14px_rgba(0,0,0,0.18)]" [stroke]="1.5"
+                 [style.width]="emojiSize()" [style.height]="emojiSize()" />
       }
     </div>
     @if (src() && !failed()) {

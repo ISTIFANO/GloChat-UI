@@ -1,16 +1,19 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { OrderView } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
 import { ShopApi } from '../../core/api/shop-api';
 import { AuthService } from '../../core/auth/auth.service';
 import { I18n } from '../../core/i18n/i18n.service';
+import { LoginPrompt } from '../../core/auth/login-prompt.service';
+import { IllustrationComponent } from '../../shared/ui/illustration.component';
 
 /** The customer's order history (their own orders only, enforced by the backend). */
 @Component({
   selector: 'mc-orders-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [IconComponent, RouterLink, IllustrationComponent],
   template: `
     <div class="px-5 pb-24 pt-2">
       <div class="flex items-center justify-between">
@@ -26,7 +29,7 @@ import { I18n } from '../../core/i18n/i18n.service';
       @if (orders(); as list) {
         @if (list.length === 0) {
           <div class="mt-16 flex flex-col items-center gap-3 text-center">
-            <span class="text-5xl" aria-hidden="true">🧾</span>
+            <mc-illustration name="receipt" class="size-40" />
             <p class="font-semibold">{{ i18n.t('orders.empty') }}</p>
             <a routerLink="/" class="btn-primary">{{ i18n.t('cart.browse') }}</a>
           </div>
@@ -38,7 +41,7 @@ import { I18n } from '../../core/i18n/i18n.service';
                   @if (market.mediaUrl(o.merchant.logoUrl); as logo) {
                     <img [src]="logo" [alt]="o.merchant.name" class="size-12 rounded-xl" />
                   } @else {
-                    <span class="grid size-12 place-items-center rounded-xl bg-iris-50 text-2xl">{{ o.merchant.emoji }}</span>
+                    <span class="grid size-12 place-items-center rounded-xl bg-iris-50 text-iris-600"><mc-icon name="store" class="size-6" /></span>
                   }
                   <div class="min-w-0 flex-1">
                     <p class="truncate font-bold">{{ o.merchant.name }}</p>
@@ -58,8 +61,8 @@ import { I18n } from '../../core/i18n/i18n.service';
         }
       } @else if (!auth.loggedIn()) {
         <div class="mt-16 flex flex-col items-center gap-4 text-center">
-          <span class="text-5xl" aria-hidden="true">🔐</span>
-          <button type="button" class="btn-primary" (click)="auth.login('/orders', i18n.lang())">{{ i18n.t('header.login') }}</button>
+          <span class="grid size-16 place-items-center rounded-[1.4rem] bg-iris-50 text-iris-600"><mc-icon name="lock" class="size-8" /></span>
+          <button type="button" class="btn-primary" (click)="prompt.ask('account')">{{ i18n.t('header.login') }}</button>
         </div>
       } @else {
         <div class="mt-5 space-y-3" aria-busy="true">
@@ -72,6 +75,7 @@ import { I18n } from '../../core/i18n/i18n.service';
 export class OrdersPage {
   readonly i18n = inject(I18n);
   readonly auth = inject(AuthService);
+  readonly prompt = inject(LoginPrompt);
   readonly market = inject(MarketApi);
   private readonly shop = inject(ShopApi);
   readonly orders = signal<OrderView[] | null>(null);

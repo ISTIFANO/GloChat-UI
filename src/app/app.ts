@@ -1,15 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { environment } from '../environments/environment';
 import { Lang } from './core/api/contracts';
 import { I18n } from './core/i18n/i18n.service';
 import { AuthService } from './core/auth/auth.service';
 import { CartStore } from './core/cart/cart.store';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { LoginPrompt } from './core/auth/login-prompt.service';
+import { LoginSheetComponent } from './shared/ui/login-sheet.component';
+import { LogoComponent } from './shared/ui/logo.component';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, LogoComponent, LoginSheetComponent],
   template: `
     <div class="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden bg-canvas sm:my-6 sm:min-h-[calc(100dvh-3rem)] sm:rounded-[2rem] sm:shadow-lift sm:ring-1 sm:ring-line">
       <!-- decorative glow -->
@@ -17,13 +20,8 @@ import { RouterLink, RouterOutlet } from '@angular/router';
       <div class="pointer-events-none absolute -start-20 top-40 size-56 rounded-full bg-zest-300/50 blur-3xl"></div>
 
       <header class="sticky top-0 z-30 flex items-center justify-between gap-3 bg-canvas/80 px-5 py-3 backdrop-blur-md">
-        <a routerLink="/" class="flex items-center gap-2" aria-label="MarketChat">
-          <span class="grid size-9 place-items-center rounded-2xl bg-iris-500 text-white shadow-glow">
-            <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
-              <path fill="currentColor" d="M4 5.5A3.5 3.5 0 0 1 7.5 2h9A3.5 3.5 0 0 1 20 5.5v7a3.5 3.5 0 0 1-3.5 3.5H11l-4.6 3.7A.9.9 0 0 1 5 19v-3.1A3.5 3.5 0 0 1 4 12.5v-7Zm8.9 1.6-.9 2.6-2.6.9 2.6.9.9 2.6.9-2.6 2.6-.9-2.6-.9-.9-2.6Z"/>
-            </svg>
-          </span>
-          <span class="hidden text-lg font-extrabold tracking-tight min-[420px]:inline">market<span class="text-iris-500">chat</span></span>
+        <a routerLink="/" class="flex items-center" aria-label="GloChat" data-brand>
+          <mc-logo [size]="36" [wordmark]="true" />
         </a>
 
         <div class="flex items-center gap-1.5">
@@ -44,7 +42,7 @@ import { RouterLink, RouterOutlet } from '@angular/router';
                [attr.aria-label]="i18n.t('header.account')" data-account>{{ u.initial }}</a>
           } @else {
             <button type="button" class="grid size-9 place-items-center rounded-full bg-surface text-ink ring-1 ring-line transition hover:ring-iris-200"
-                    [attr.aria-label]="i18n.t('header.login')" (click)="login()" data-login>
+                    [attr.aria-label]="i18n.t('header.login')" (click)="prompt.ask('account')" data-login>
               <svg viewBox="0 0 20 20" class="size-4" aria-hidden="true"><path fill="currentColor" d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c0-3.3 3.1-6 7-6s7 2.7 7 6H3Z"/></svg>
             </button>
           }
@@ -62,6 +60,15 @@ import { RouterLink, RouterOutlet } from '@angular/router';
       <main class="relative">
         <router-outlet />
       </main>
+
+      @if (navigating()) {
+        <div class="fixed inset-0 z-40 grid place-content-center bg-canvas/70 backdrop-blur-sm" role="status" aria-live="polite" data-page-loader>
+          <mc-logo [size]="64" [animated]="true" />
+        </div>
+      }
+      @if (prompt.open()) {
+        <mc-login-sheet />
+      }
     </div>
   `,
 })
@@ -69,6 +76,21 @@ export class App {
   readonly i18n = inject(I18n);
   readonly auth = inject(AuthService);
   readonly cart = inject(CartStore);
+  readonly prompt = inject(LoginPrompt);
+  /** branded loader when a page takes more than 180 ms to load (lazy routes) */
+  readonly navigating = signal(false);
+
+  constructor() {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    inject(Router).events.subscribe((e) => {
+      if (e instanceof NavigationStart) {
+        timer = setTimeout(() => this.navigating.set(true), 180);
+      } else if (e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError) {
+        clearTimeout(timer);
+        this.navigating.set(false);
+      }
+    });
+  }
   readonly locationLabel = environment.defaultLocation.label;
   login(): void {
     void this.auth.login(location.pathname + location.search, this.i18n.lang());

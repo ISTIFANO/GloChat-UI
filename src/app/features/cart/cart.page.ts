@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiError, CartIssue, CartLine, PaymentMethod, SavedAddress } from '../../core/api/contracts';
@@ -11,12 +12,14 @@ import { CheckoutStore } from '../../core/cart/checkout.store';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Motion } from '../../shared/motion/motion.service';
 import { FoodImageComponent } from '../../shared/ui/food-image.component';
+import { IllustrationComponent } from '../../shared/ui/illustration.component';
+import { LoginPrompt } from '../../core/auth/login-prompt.service';
 
 /** Cart: lines re-priced by the backend, delivery address, payment method, and every checkout blocker explained. */
 @Component({
   selector: 'mc-cart-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, FoodImageComponent],
+  imports: [IconComponent, RouterLink, FormsModule, FoodImageComponent, IllustrationComponent],
   template: `
     <div #root class="px-5 pb-40 pt-2">
       <div class="flex items-center justify-between">
@@ -30,14 +33,14 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 
       @if (!auth.loggedIn()) {
         <div class="mt-16 flex flex-col items-center gap-4 text-center">
-          <span class="grid size-20 place-items-center rounded-[1.6rem] bg-iris-50 text-4xl" aria-hidden="true">🛒</span>
+          <mc-illustration name="bag" class="size-40" />
           <p class="text-lg font-bold">{{ i18n.t('cart.loginTitle') }}</p>
           <button type="button" class="btn-primary" (click)="login()">{{ i18n.t('header.login') }}</button>
         </div>
       } @else if (cart.view(); as v) {
         @if (v.lines.length === 0) {
           <div data-reveal class="mt-16 flex flex-col items-center gap-3 text-center">
-            <span class="grid size-24 place-items-center rounded-[1.8rem] bg-gradient-to-br from-iris-100 to-zest-300/60 text-5xl" aria-hidden="true">🛍️</span>
+            <mc-illustration name="bag" class="size-44" />
             <p class="text-lg font-extrabold">{{ i18n.t('cart.empty.title') }}</p>
             <p class="max-w-xs text-sm text-muted">{{ i18n.t('cart.empty.text') }}</p>
             <a routerLink="/" class="btn-primary mt-2">{{ i18n.t('cart.browse') }}</a>
@@ -49,7 +52,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
               @if (market.mediaUrl(m.logoUrl); as logo) {
                 <img [src]="logo" [alt]="m.name" class="size-11 rounded-xl" />
               } @else {
-                <span class="grid size-11 place-items-center rounded-xl bg-iris-50 text-2xl">{{ m.emoji }}</span>
+                <span class="grid size-11 place-items-center rounded-xl bg-iris-50 text-iris-600"><mc-icon name="store" class="size-5" /></span>
               }
               <div class="min-w-0 flex-1">
                 <p class="truncate font-bold">{{ m.name }}</p>
@@ -66,7 +69,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
             @for (line of v.lines; track line.lineId) {
               <li class="flex gap-3 p-3" [class.opacity-55]="!line.available" data-cart-line>
                 <mc-food-image class="size-[4.5rem] shrink-0 rounded-2xl" [path]="line.imageUrl"
-                               [visual]="{ emoji: line.emoji ?? '🍽️', from: '#efeaff', to: '#c9bcff' }" [alt]="line.name ?? ''" emojiSize="2rem" />
+                               [visual]="{ emoji: '', from: '#efeaff', to: '#c9bcff' }" [alt]="line.name ?? ''" emojiSize="2rem" />
                 <div class="flex min-w-0 flex-1 flex-col">
                   <div class="flex items-start justify-between gap-2">
                     <p dir="auto" class="font-bold leading-snug">{{ line.name ?? i18n.t('cart.unavailable') }}</p>
@@ -103,14 +106,14 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
             <h2 class="mb-2 text-lg font-extrabold">{{ i18n.t('cart.delivery') }}</h2>
             @if (v.delivery && !editingAddress()) {
               <div class="flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-line/70">
-                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-zest-300 text-lg" aria-hidden="true">📍</span>
+                <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-zest-300 text-ink" aria-hidden="true"><mc-icon name="pin" class="size-5" /></span>
                 <div class="min-w-0 flex-1">
                   <p class="font-bold">{{ v.delivery.label }}</p>
                   <p dir="auto" class="truncate text-xs text-muted">{{ v.delivery.line }}, {{ v.delivery.city }}</p>
                   @if (v.delivery.inZone === false) {
                     <p class="text-xs font-bold text-ember-500">{{ i18n.t('cart.outOfZone') }}</p>
                   } @else if (v.delivery.etaText) {
-                    <p class="text-xs font-semibold text-iris-600" dir="ltr">🛵 {{ v.delivery.etaText }} · {{ v.delivery.distanceKm }} km</p>
+                    <p class="flex items-center gap-1 text-xs font-semibold text-iris-600" dir="ltr"><mc-icon name="scooter" class="size-4" /> {{ v.delivery.etaText }} · {{ v.delivery.distanceKm }} km</p>
                   }
                 </div>
                 <button type="button" class="chip !py-1.5 !text-xs" (click)="editingAddress.set(true)">{{ i18n.t('cart.change') }}</button>
@@ -122,7 +125,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
                   <p class="mt-3 text-xs font-semibold uppercase tracking-wide text-muted">{{ i18n.t('cart.saved') }}</p>
                   <div class="mt-2 flex flex-wrap gap-2">
                     @for (a of saved(); track a.id) {
-                      <button type="button" class="chip" (click)="useSaved(a)">📍 {{ a.label }} <span class="text-muted">· {{ a.line }}</span></button>
+                      <button type="button" class="chip" (click)="useSaved(a)"><mc-icon name="pin" class="size-4 text-iris-500" /> {{ a.label }} <span class="text-muted">· {{ a.line }}</span></button>
                     }
                   </div>
                 }
@@ -156,7 +159,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
                         class="flex flex-col items-start gap-1 rounded-2xl bg-surface p-3 text-start shadow-soft ring-2 transition disabled:opacity-50"
                         [class]="v.paymentMethod === pm.method ? 'ring-iris-500 bg-iris-50/60' : 'ring-line/70'"
                         (click)="pay(pm.method, $event)">
-                  <span class="text-2xl" aria-hidden="true">{{ pm.icon }}</span>
+                  <span class="grid size-10 place-items-center rounded-xl" [class]="v.paymentMethod === pm.method ? 'bg-iris-500 text-white' : 'bg-canvas text-ink'"><mc-icon [name]="pm.icon" class="size-5" /></span>
                   <span class="text-sm font-bold">{{ i18n.t(pm.label) }}</span>
                   <span class="text-[0.7rem] text-muted">{{ accepted ? i18n.t(pm.note) : i18n.t('cart.notAccepted') }}</span>
                 </button>
@@ -169,7 +172,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
             <ul data-reveal class="mt-5 space-y-2" aria-live="polite">
               @for (issue of visibleIssues(v.issues); track issue.code + issue.lineId) {
                 <li class="flex items-start gap-2 rounded-2xl bg-ember-500/10 px-3 py-2.5 text-sm font-semibold text-ember-500">
-                  <span aria-hidden="true">⚠️</span>
+                  <mc-icon name="alert" class="mt-px size-[1.1rem]" />
                   <span>{{ i18n.t('issue.' + issue.code, { missing: issue.missing != null ? i18n.price(issue.missing) : '' }) }}</span>
                 </li>
               }
@@ -212,6 +215,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 export class CartPage {
   readonly i18n = inject(I18n);
   readonly auth = inject(AuthService);
+  private readonly prompt = inject(LoginPrompt);
   readonly cart = inject(CartStore);
   readonly market = inject(MarketApi);
   private readonly shop = inject(ShopApi);
@@ -229,8 +233,8 @@ export class CartPage {
   form = { label: '', line: '', areaId: 'agdal' };
 
   readonly paymentOptions: { method: PaymentMethod; icon: string; label: string; note: string }[] = [
-    { method: 'CASH', icon: '💵', label: 'cart.cash', note: 'cart.cashNote' },
-    { method: 'CARD', icon: '💳', label: 'cart.card', note: 'cart.cardNote' },
+    { method: 'CASH', icon: 'cash', label: 'cart.cash', note: 'cart.cashNote' },
+    { method: 'CARD', icon: 'card', label: 'cart.card', note: 'cart.cardNote' },
   ];
 
   readonly hasLines = computed(() => (this.cart.view()?.lines.length ?? 0) > 0);
@@ -245,7 +249,7 @@ export class CartPage {
   }
 
   login(): void {
-    void this.auth.login('/cart', this.i18n.lang());
+    void this.prompt.ask('account');
   }
 
   selectionText(line: CartLine): string {

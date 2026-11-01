@@ -2,6 +2,8 @@ import {
   ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, afterNextRender, computed, effect, inject, input,
   signal, viewChild,
 } from '@angular/core';
+import { IllustrationComponent } from '../../shared/ui/illustration.component';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { ApiError, OrderStatus, OrderView } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
@@ -12,7 +14,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 
 const STEPS: OrderStatus[] = ['PLACED', 'ACCEPTED', 'PREPARING', 'ON_THE_WAY', 'DELIVERED'];
 const ICON: Record<OrderStatus, string> = {
-  AWAITING_PAYMENT: '💳', PLACED: '✅', ACCEPTED: '👨‍🍳', PREPARING: '🔥', ON_THE_WAY: '🛵', DELIVERED: '🎉', CANCELED: '✖️',
+  AWAITING_PAYMENT: 'card', PLACED: 'check-circle', ACCEPTED: 'chef', PREPARING: 'flame', ON_THE_WAY: 'scooter', DELIVERED: 'home-check', CANCELED: 'x-circle',
 };
 
 /**
@@ -22,7 +24,7 @@ const ICON: Record<OrderStatus, string> = {
 @Component({
   selector: 'mc-order-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FoodImageComponent],
+  imports: [IllustrationComponent, IconComponent, RouterLink, FoodImageComponent],
   template: `
     <div #root class="px-5 pb-28 pt-2">
       @if (order(); as o) {
@@ -38,10 +40,10 @@ const ICON: Record<OrderStatus, string> = {
               <h1 class="mt-1 text-[1.6rem] font-extrabold leading-tight" data-status>{{ i18n.t('order.status.' + o.status) }}</h1>
               <p class="mt-1 text-sm text-white/80">{{ i18n.t('order.sub.' + o.status) }}</p>
             </div>
-            <span #badge class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-3xl backdrop-blur" aria-hidden="true">{{ icon(o.status) }}</span>
+            <span #badge class="grid size-14 shrink-0 place-items-center rounded-2xl bg-white/15 text-white backdrop-blur" aria-hidden="true"><mc-icon [name]="icon(o.status)" class="size-8" [stroke]="1.7" /></span>
           </div>
           @if (o.status !== 'CANCELED' && o.status !== 'AWAITING_PAYMENT') {
-            <p class="mt-4 inline-flex gap-1 rounded-full bg-zest-300 px-3 py-1 text-xs font-bold text-ink">🛵 {{ i18n.t('checkout.eta') }} : <bdi dir="ltr">{{ o.etaText }}</bdi></p>
+            <p class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-zest-300 px-3 py-1 text-xs font-bold text-ink"><mc-icon name="scooter" class="size-4" /> {{ i18n.t('checkout.eta') }} : <bdi dir="ltr">{{ o.etaText }}</bdi></p>
           }
         </section>
 
@@ -56,7 +58,7 @@ const ICON: Record<OrderStatus, string> = {
 
         @if (o.status === 'AWAITING_PAYMENT') {
           <button type="button" class="btn-primary mt-4 w-full text-base" [disabled]="busy()" (click)="payNow()">
-            💳 <span dir="ltr">{{ i18n.t('order.pay', { price: i18n.price(o.total) }) }}</span>
+            <mc-icon name="card" class="size-5" /> <span dir="ltr">{{ i18n.t('order.pay', { price: i18n.price(o.total) }) }}</span>
           </button>
         }
 
@@ -67,7 +69,7 @@ const ICON: Record<OrderStatus, string> = {
               <li class="flex flex-1 flex-col items-center gap-1.5 text-center">
                 <span class="grid size-8 place-items-center rounded-full text-xs font-extrabold transition"
                       [class]="i <= stepIndex() ? 'bg-iris-500 text-white shadow-glow' : 'bg-line text-muted'"
-                      [attr.aria-current]="i === stepIndex() ? 'step' : null">{{ i < stepIndex() ? '✓' : i + 1 }}</span>
+                      [attr.aria-current]="i === stepIndex() ? 'step' : null">@if (i < stepIndex()) { <mc-icon name="check" class="size-4" [stroke]="2.6" /> } @else { {{ i + 1 }} }</span>
                 <span class="text-[0.65rem] font-semibold leading-tight" [class]="i <= stepIndex() ? 'text-ink' : 'text-muted'">{{ i18n.t('order.step.' + s) }}</span>
               </li>
             }
@@ -88,7 +90,7 @@ const ICON: Record<OrderStatus, string> = {
           <ul class="divide-y divide-line">
             @for (l of o.lines; track $index) {
               <li class="flex items-center gap-3 p-3">
-                <mc-food-image class="size-12 shrink-0 rounded-xl" [path]="l.imageUrl" [visual]="{ emoji: l.emoji ?? '🍽️', from: '#efeaff', to: '#c9bcff' }" emojiSize="1.5rem" />
+                <mc-food-image class="size-12 shrink-0 rounded-xl" [path]="l.imageUrl" [visual]="{ emoji: '', from: '#efeaff', to: '#c9bcff' }" emojiSize="1.5rem" />
                 <div class="min-w-0 flex-1">
                   <p dir="auto" class="truncate text-sm font-bold"><span class="text-iris-600">{{ l.quantity }}×</span> {{ l.name }}</p>
                   @if (l.selections.length) {
@@ -105,15 +107,16 @@ const ICON: Record<OrderStatus, string> = {
             <div class="flex justify-between pt-1 text-base font-extrabold"><dt>{{ i18n.t('cart.total') }}</dt><dd dir="ltr">{{ i18n.price(o.total) }}</dd></div>
             <div class="flex justify-between pt-1 text-xs">
               <dt class="text-muted">{{ i18n.t('cart.payment') }}</dt>
-              <dd class="font-semibold" [class.text-success]="o.paymentStatus === 'PAID'">
-                {{ o.paymentStatus === 'PAID' ? '✓ ' + i18n.t('order.paid') : o.paymentMethod === 'CASH' ? '💵 ' + i18n.t('order.cash') : '💳 ' + i18n.t('cart.card') }}
+              <dd class="flex items-center gap-1 font-semibold" [class.text-success]="o.paymentStatus === 'PAID'">
+                <mc-icon [name]="o.paymentStatus === 'PAID' ? 'check' : o.paymentMethod === 'CASH' ? 'cash' : 'card'" class="size-4" />
+                {{ o.paymentStatus === 'PAID' ? i18n.t('order.paid') : o.paymentMethod === 'CASH' ? i18n.t('order.cash') : i18n.t('cart.card') }}
               </dd>
             </div>
           </dl>
         </section>
 
         <div data-reveal class="mt-4 flex items-center gap-3 rounded-2xl bg-surface p-3 shadow-soft ring-1 ring-line/70">
-          <span class="grid size-10 place-items-center rounded-xl bg-zest-300 text-lg" aria-hidden="true">📍</span>
+          <span class="grid size-10 shrink-0 place-items-center rounded-xl bg-zest-300 text-ink" aria-hidden="true"><mc-icon name="pin" class="size-5" /></span>
           <p dir="auto" class="min-w-0 truncate text-sm"><span class="font-bold">{{ o.delivery.label }}</span> · {{ o.delivery.line }}, {{ o.delivery.city }}</p>
         </div>
 
@@ -133,7 +136,7 @@ const ICON: Record<OrderStatus, string> = {
         }
       } @else if (error()) {
         <div class="flex flex-col items-center gap-3 py-24 text-center">
-          <span class="text-5xl" aria-hidden="true">🧾</span>
+          <mc-illustration name="receipt" class="size-36" />
           <p class="font-semibold">{{ error() }}</p>
           <a routerLink="/orders" class="btn-ghost">{{ i18n.t('orders.title') }}</a>
         </div>
