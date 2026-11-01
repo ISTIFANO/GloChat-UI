@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy, Component, DestroyRef, ElementRef, Injector, afterNextRender, effect, inject, input, signal,
   viewChild,
 } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { ApiError, MerchantPage } from '../../core/api/contracts';
@@ -15,7 +16,7 @@ import { ProductSheetComponent } from '../product/product-sheet.component';
 @Component({
   selector: 'mc-merchant-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FoodImageComponent, ProductSheetComponent],
+  imports: [IconComponent, RouterLink, FoodImageComponent, ProductSheetComponent],
   template: `
     @if (page(); as p) {
       <div #root>
@@ -23,7 +24,7 @@ import { ProductSheetComponent } from '../product/product-sheet.component';
         <div class="relative h-60 overflow-hidden">
           <div #cover class="absolute inset-0 origin-top">
             <mc-food-image class="size-full" [path]="p.merchant.coverUrl" [alt]="p.merchant.name" [eager]="true"
-                           [visual]="{ emoji: p.merchant.emoji, from: '#c9bcff', to: '#5b3df5' }" emojiSize="5rem" />
+                           [visual]="{ emoji: '', from: '#c9bcff', to: '#5b3df5' }" emojiSize="5rem" />
           </div>
           <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-canvas"></div>
           <a routerLink="/" class="absolute start-4 top-4 grid size-10 place-items-center rounded-full bg-white/90 text-ink shadow-soft backdrop-blur transition active:scale-95"
@@ -39,7 +40,7 @@ import { ProductSheetComponent } from '../product/product-sheet.component';
               @if (api.mediaUrl(p.merchant.logoUrl); as logo) {
                 <img [src]="logo" [alt]="p.merchant.name" class="size-full" />
               } @else {
-                <span class="grid size-full place-items-center text-4xl">{{ p.merchant.emoji }}</span>
+                <span class="grid size-full place-items-center bg-iris-50 text-iris-600"><mc-icon name="store" class="size-9" /></span>
               }
             </div>
             <span data-reveal class="mb-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold"
@@ -73,11 +74,11 @@ import { ProductSheetComponent } from '../product/product-sheet.component';
 
           @if (!p.merchant.open) {
             <p data-reveal class="mt-3 rounded-2xl bg-ink px-4 py-3 text-sm font-medium text-white">
-              🌙 {{ i18n.t('merchant.closedBanner', { h: p.merchant.todayHours ?? '—' }) }}
+              <mc-icon name="moon" class="me-1 size-[1.1rem]" /> {{ i18n.t('merchant.closedBanner', { h: p.merchant.todayHours ?? '—' }) }}
             </p>
           } @else if (!p.merchant.delivers) {
             <p data-reveal class="mt-3 rounded-2xl bg-ember-500/10 px-4 py-3 text-sm font-medium text-ember-500">
-              📍 {{ i18n.t('merchant.outOfZone') }}
+              <mc-icon name="pin" class="me-1 size-[1.1rem]" /> {{ i18n.t('merchant.outOfZone') }}
             </p>
           }
         </section>
@@ -126,7 +127,7 @@ import { ProductSheetComponent } from '../product/product-sheet.component';
       </div>
     } @else if (error()) {
       <div class="flex flex-col items-center gap-3 px-6 py-24 text-center">
-        <span class="text-5xl" aria-hidden="true">🏪</span>
+        <span class="grid size-16 place-items-center rounded-[1.4rem] bg-iris-50 text-iris-600"><mc-icon name="store" class="size-8" /></span>
         <p class="font-semibold">{{ error() }}</p>
         <a routerLink="/" class="btn-ghost">{{ i18n.t('merchant.back') }}</a>
       </div>

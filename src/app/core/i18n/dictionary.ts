@@ -70,7 +70,7 @@ export const DICTIONARY: Record<string, Entry> = {
   'header.cart': { fr: 'Panier', ar: 'السلة', en: 'Cart' },
   'header.account': { fr: 'Mon compte', ar: 'حسابي', en: 'My account' },
   'header.logout': { fr: 'Se déconnecter', ar: 'خروج', en: 'Log out' },
-  'sheet.added': { fr: 'Ajouté au panier ✓', ar: 'تزاد للسلة ✓', en: 'Added to cart ✓' },
+  'sheet.added': { fr: 'Ajouté au panier', ar: 'تزاد للسلة', en: 'Added to cart' },
   'sheet.conflict': { fr: 'Ton panier contient déjà des articles de {m}. On commence un nouveau panier ?', ar: 'السلة فيها حوايج من {m}. نبداو سلة جديدة؟', en: 'Your cart has items from {m}. Start a new cart?' },
   'sheet.newCart': { fr: 'Nouveau panier', ar: 'سلة جديدة', en: 'New cart' },
   'sheet.keep': { fr: 'Garder mon panier', ar: 'خلي السلة', en: 'Keep my cart' },

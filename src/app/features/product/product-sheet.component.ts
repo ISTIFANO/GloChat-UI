@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy, Component, ElementRef, afterNextRender, computed, inject, input, output, signal, viewChild,
 } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { ApiError, GeoLocation, OptionGroup, ProductDetail } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
 import { CartStore } from '../../core/cart/cart.store';
@@ -13,7 +14,7 @@ import { SelectionState, initialSelection, missingGroups, previewUnitPrice, togg
 @Component({
   selector: 'mc-product-sheet',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FoodImageComponent],
+  imports: [IconComponent, FoodImageComponent],
   template: `
     <div class="fixed inset-0 z-40 flex items-end justify-center" role="dialog" aria-modal="true" [attr.aria-label]="detail()?.product?.name ?? ''">
       <div #backdrop class="absolute inset-0 bg-ink/45 backdrop-blur-[2px]" (click)="close()"></div>
@@ -37,8 +38,8 @@ import { SelectionState, initialSelection, missingGroups, previewUnitPrice, togg
                 <h2 class="text-2xl font-extrabold tracking-tight">{{ d.product.name }}</h2>
                 <p dir="auto" class="mt-1 text-start text-sm leading-relaxed text-muted">{{ d.description }}</p>
                 <p class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-ink-soft">
-                  <span class="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1">{{ d.product.merchant.emoji }} {{ d.product.merchant.name }}</span>
-                  <span class="rounded-full bg-canvas px-2.5 py-1">⏱ <span dir="ltr">{{ d.product.etaText }}</span></span>
+                  <span class="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1"><mc-icon name="store" class="size-3.5 text-iris-500" /> {{ d.product.merchant.name }}</span>
+                  <span class="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1"><mc-icon name="clock" class="size-3.5 text-iris-500" /> <span dir="ltr">{{ d.product.etaText }}</span></span>
                   <span class="rounded-full bg-canvas px-2.5 py-1">{{ i18n.t('card.delivery', { fee: i18n.price(d.product.deliveryFee) }) }}</span>
                 </p>
               </header>
@@ -235,7 +236,7 @@ export class ProductSheetComponent {
 
   private async flyAndClose(): Promise<void> {
     this.notice.set(this.i18n.t('sheet.added'));
-    const fly = this.motion.flyToCart(this.hero()?.nativeElement ?? null, this.detail()?.product.visual.emoji ?? '🛍️');
+    const fly = this.motion.flyToCart(this.hero()?.nativeElement ?? null);
     await this.close();
     await fly;
   }

@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { RouterLink } from '@angular/router';
 import { OrderView } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
@@ -12,7 +13,7 @@ import { IllustrationComponent } from '../../shared/ui/illustration.component';
 @Component({
   selector: 'mc-orders-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, IllustrationComponent],
+  imports: [IconComponent, RouterLink, IllustrationComponent],
   template: `
     <div class="px-5 pb-24 pt-2">
       <div class="flex items-center justify-between">
@@ -40,7 +41,7 @@ import { IllustrationComponent } from '../../shared/ui/illustration.component';
                   @if (market.mediaUrl(o.merchant.logoUrl); as logo) {
                     <img [src]="logo" [alt]="o.merchant.name" class="size-12 rounded-xl" />
                   } @else {
-                    <span class="grid size-12 place-items-center rounded-xl bg-iris-50 text-2xl">{{ o.merchant.emoji }}</span>
+                    <span class="grid size-12 place-items-center rounded-xl bg-iris-50 text-iris-600"><mc-icon name="store" class="size-6" /></span>
                   }
                   <div class="min-w-0 flex-1">
                     <p class="truncate font-bold">{{ o.merchant.name }}</p>
@@ -60,7 +61,7 @@ import { IllustrationComponent } from '../../shared/ui/illustration.component';
         }
       } @else if (!auth.loggedIn()) {
         <div class="mt-16 flex flex-col items-center gap-4 text-center">
-          <span class="text-5xl" aria-hidden="true">🔐</span>
+          <span class="grid size-16 place-items-center rounded-[1.4rem] bg-iris-50 text-iris-600"><mc-icon name="lock" class="size-8" /></span>
           <button type="button" class="btn-primary" (click)="prompt.ask('account')">{{ i18n.t('header.login') }}</button>
         </div>
       } @else {

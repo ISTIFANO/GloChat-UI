@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { IconComponent } from '../../shared/ui/icon.component';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 import { CartStore } from '../../core/cart/cart.store';
@@ -9,11 +10,11 @@ import { Motion } from '../../shared/motion/motion.service';
 @Component({
   selector: 'mc-auth-callback',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [IconComponent, RouterLink],
   template: `
     <div class="flex flex-col items-center gap-4 px-6 py-28 text-center">
       @if (failed()) {
-        <span class="text-5xl" aria-hidden="true">🔐</span>
+        <span class="grid size-16 place-items-center rounded-[1.4rem] bg-iris-50 text-iris-600"><mc-icon name="lock" class="size-8" /></span>
         <p class="font-semibold">{{ i18n.t('auth.failed') }}</p>
         <a routerLink="/" class="btn-ghost">{{ i18n.t('merchant.back') }}</a>
       } @else {
