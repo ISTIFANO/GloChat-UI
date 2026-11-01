@@ -2,12 +2,12 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { environment } from '../environments/environment';
 import { Lang } from './core/api/contracts';
 import { I18n } from './core/i18n/i18n.service';
-import { DiscoverPage } from './features/discover/discover.page';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DiscoverPage],
+  imports: [RouterOutlet, RouterLink],
   template: `
     <div class="relative mx-auto min-h-dvh max-w-[480px] overflow-hidden bg-canvas sm:my-6 sm:min-h-[calc(100dvh-3rem)] sm:rounded-[2rem] sm:shadow-lift sm:ring-1 sm:ring-line">
       <!-- decorative glow -->
@@ -15,7 +15,7 @@ import { DiscoverPage } from './features/discover/discover.page';
       <div class="pointer-events-none absolute -start-20 top-40 size-56 rounded-full bg-zest-300/50 blur-3xl"></div>
 
       <header class="sticky top-0 z-30 flex items-center justify-between gap-3 bg-canvas/80 px-5 py-3 backdrop-blur-md">
-        <a href="/" class="flex items-center gap-2" aria-label="MarketChat">
+        <a routerLink="/" class="flex items-center gap-2" aria-label="MarketChat">
           <span class="grid size-9 place-items-center rounded-2xl bg-iris-500 text-white shadow-glow">
             <svg viewBox="0 0 24 24" class="size-5" aria-hidden="true">
               <path fill="currentColor" d="M4 5.5A3.5 3.5 0 0 1 7.5 2h9A3.5 3.5 0 0 1 20 5.5v7a3.5 3.5 0 0 1-3.5 3.5H11l-4.6 3.7A.9.9 0 0 1 5 19v-3.1A3.5 3.5 0 0 1 4 12.5v-7Zm8.9 1.6-.9 2.6-2.6.9 2.6.9.9 2.6.9-2.6 2.6-.9-2.6-.9-.9-2.6Z"/>
@@ -41,7 +41,7 @@ import { DiscoverPage } from './features/discover/discover.page';
       </header>
 
       <main class="relative">
-        <mc-discover />
+        <router-outlet />
       </main>
     </div>
   `,
