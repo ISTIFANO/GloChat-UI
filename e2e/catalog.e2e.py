@@ -28,6 +28,7 @@ def check(name, fn):
 with sync_playwright() as p:
     browser = p.chromium.launch()
     ctx = browser.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=2, locale="fr-FR")
+    ctx.add_init_script("sessionStorage.setItem('mc.welcomeDismissed', '1')")  # catalog only; the sign-in sheet is tested in checkout.e2e.py
     page = ctx.new_page()
     api_calls = []
     page.on("request", lambda r: api_calls.append(r.url) if "/api/" in r.url else None)

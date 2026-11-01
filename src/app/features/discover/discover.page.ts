@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 import { ApiError, ProductCard } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
 import { I18n } from '../../core/i18n/i18n.service';
+import { LoginPrompt } from '../../core/auth/login-prompt.service';
 import { Motion } from '../../shared/motion/motion.service';
 import { ProductCardComponent } from '../product/product-card.component';
 import { ProductSheetComponent } from '../product/product-sheet.component';
@@ -105,6 +106,7 @@ interface Suggestion {
   `,
 })
 export class DiscoverPage {
+  private readonly prompt = inject(LoginPrompt);
   readonly i18n = inject(I18n);
   private readonly api = inject(MarketApi);
   private readonly motion = inject(Motion);
@@ -132,7 +134,10 @@ export class DiscoverPage {
   readonly openProductId = signal<string | null>(null);
 
   constructor() {
-    afterNextRender(() => this.motion.heroIn(this.hero().nativeElement));
+    afterNextRender(() => {
+      this.motion.heroIn(this.hero().nativeElement);
+      if (this.prompt.shouldWelcome()) setTimeout(() => this.prompt.shouldWelcome() && void this.prompt.ask('welcome'), 900);
+    });
   }
 
   useSuggestion(s: Suggestion): void {

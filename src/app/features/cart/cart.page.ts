@@ -11,12 +11,14 @@ import { CheckoutStore } from '../../core/cart/checkout.store';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Motion } from '../../shared/motion/motion.service';
 import { FoodImageComponent } from '../../shared/ui/food-image.component';
+import { IllustrationComponent } from '../../shared/ui/illustration.component';
+import { LoginPrompt } from '../../core/auth/login-prompt.service';
 
 /** Cart: lines re-priced by the backend, delivery address, payment method, and every checkout blocker explained. */
 @Component({
   selector: 'mc-cart-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, FormsModule, FoodImageComponent],
+  imports: [RouterLink, FormsModule, FoodImageComponent, IllustrationComponent],
   template: `
     <div #root class="px-5 pb-40 pt-2">
       <div class="flex items-center justify-between">
@@ -30,14 +32,14 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 
       @if (!auth.loggedIn()) {
         <div class="mt-16 flex flex-col items-center gap-4 text-center">
-          <span class="grid size-20 place-items-center rounded-[1.6rem] bg-iris-50 text-4xl" aria-hidden="true">🛒</span>
+          <mc-illustration name="bag" class="size-40" />
           <p class="text-lg font-bold">{{ i18n.t('cart.loginTitle') }}</p>
           <button type="button" class="btn-primary" (click)="login()">{{ i18n.t('header.login') }}</button>
         </div>
       } @else if (cart.view(); as v) {
         @if (v.lines.length === 0) {
           <div data-reveal class="mt-16 flex flex-col items-center gap-3 text-center">
-            <span class="grid size-24 place-items-center rounded-[1.8rem] bg-gradient-to-br from-iris-100 to-zest-300/60 text-5xl" aria-hidden="true">🛍️</span>
+            <mc-illustration name="bag" class="size-44" />
             <p class="text-lg font-extrabold">{{ i18n.t('cart.empty.title') }}</p>
             <p class="max-w-xs text-sm text-muted">{{ i18n.t('cart.empty.text') }}</p>
             <a routerLink="/" class="btn-primary mt-2">{{ i18n.t('cart.browse') }}</a>
@@ -212,6 +214,7 @@ import { FoodImageComponent } from '../../shared/ui/food-image.component';
 export class CartPage {
   readonly i18n = inject(I18n);
   readonly auth = inject(AuthService);
+  private readonly prompt = inject(LoginPrompt);
   readonly cart = inject(CartStore);
   readonly market = inject(MarketApi);
   private readonly shop = inject(ShopApi);
@@ -245,7 +248,7 @@ export class CartPage {
   }
 
   login(): void {
-    void this.auth.login('/cart', this.i18n.lang());
+    void this.prompt.ask('account');
   }
 
   selectionText(line: CartLine): string {

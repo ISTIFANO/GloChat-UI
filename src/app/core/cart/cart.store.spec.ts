@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { environment } from '../../../environments/environment';
 import { CartView } from '../api/contracts';
 import { AuthService } from '../auth/auth.service';
+import { LoginPrompt } from '../auth/login-prompt.service';
 import { CartStore } from './cart.store';
 import { CheckoutStore } from './checkout.store';
 
@@ -19,6 +20,7 @@ const view = (over: Partial<CartView> = {}): CartView => ({
 describe('CartStore', () => {
   const loggedIn = signal(true);
   const login = vi.fn(async () => undefined);
+  const ask = vi.fn(async () => false);
   let ctrl: HttpTestingController;
   let store: CartStore;
 
@@ -26,9 +28,12 @@ describe('CartStore', () => {
     sessionStorage.clear();
     loggedIn.set(true);
     login.mockClear();
+    ask.mockReset();
+    ask.mockResolvedValue(false);
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting(),
-        { provide: AuthService, useValue: { loggedIn, login, validAccessToken: async () => 't' } }],
+        { provide: AuthService, useValue: { loggedIn, login, validAccessToken: async () => 't' } },
+        { provide: LoginPrompt, useValue: { ask } }],
     });
     ctrl = TestBed.inject(HttpTestingController);
     store = TestBed.inject(CartStore);
@@ -59,20 +64,38 @@ describe('CartStore', () => {
     await done;
   });
 
-  it('signed out: remembers the add, sends to login, replays it after login', async () => {
+  it('signed out: asks to sign in on the page, then adds without leaving it', async () => {
     loggedIn.set(false);
-    const result = await store.add({ productId: 'p-fries', quantity: 1, optionValueIds: [] });
-    expect(result).toEqual({ kind: 'login' });
-    expect(login).toHaveBeenCalled();
-    ctrl.expectNone(`${CART}/operations`);
-
-    loggedIn.set(true);
-    const replay = store.resumePendingAdd();
+    ask.mockImplementation(async () => {
+      loggedIn.set(true);   // the popup login succeeded
+      return true;
+    });
+    const result = store.add({ productId: 'p-fries', quantity: 1, optionValueIds: [] });
+    await new Promise((r) => setTimeout(r));
+    TestBed.tick();
+    ctrl.match(CART).forEach((r) => r.flush(view()));   // cart reload triggered by the login
     const req = ctrl.expectOne(`${CART}/operations`);
     expect(req.request.body.operations[0].productId).toBe('p-fries');
     req.flush(view({ itemCount: 1 }));
-    expect(await replay).toEqual({ kind: 'added' });
+    expect(await result).toEqual({ kind: 'added' });
+    expect(ask).toHaveBeenCalledWith('cart');
+    expect(login).not.toHaveBeenCalled();                  // no page redirect
     expect(sessionStorage.getItem('mc.pendingAdd')).toBeNull();
+  });
+
+  it('signed out and the customer says "later": nothing is added', async () => {
+    loggedIn.set(false);
+    expect(await store.add({ productId: 'p-fries', quantity: 1, optionValueIds: [] })).toEqual({ kind: 'login' });
+    ctrl.expectNone(`${CART}/operations`);
+  });
+
+  it('replays an add interrupted by a full-page login (popup blocked)', async () => {
+    sessionStorage.setItem('mc.pendingAdd', JSON.stringify({ productId: 'p-coke', quantity: 1, optionValueIds: [] }));
+    const replay = store.resumePendingAdd();
+    const req = ctrl.expectOne(`${CART}/operations`);
+    expect(req.request.body.operations[0].productId).toBe('p-coke');
+    req.flush(view({ itemCount: 1 }));
+    expect(await replay).toEqual({ kind: 'added' });
   });
 });
 
