@@ -15,6 +15,8 @@ export interface MerchantSummary {
   name: string;
   emoji: string;
   cuisine: string;
+  /** relative to the gateway, e.g. /api/catalog/media/merchants/m-smash-logo.svg */
+  logoUrl: string | null;
 }
 
 /** Licence-free product visual: an emoji on a gradient (demo catalog). */
@@ -30,6 +32,8 @@ export interface ProductCard {
   name: string;
   shortDescription: string;
   visual: ProductVisual;
+  /** relative to the gateway; null when the merchant has no photo (the visual is used instead) */
+  imageUrl: string | null;
   price: number;
   currency: string;
   merchant: MerchantSummary;
@@ -63,6 +67,37 @@ export interface ProductDetail {
   product: ProductCard;
   description: string;
   optionGroups: OptionGroup[];
+}
+
+/** GET /api/catalog/merchants/{id} */
+export interface MerchantInfo {
+  id: string;
+  name: string;
+  emoji: string;
+  description: string;
+  logoUrl: string | null;
+  coverUrl: string | null;
+  cuisineTags: string[];
+  open: boolean;
+  todayHours: string | null;
+  distanceKm: number;
+  etaText: string;
+  deliveryFee: number;
+  minOrderAmount: number;
+  delivers: boolean;
+  acceptsCash: boolean;
+  acceptsCard: boolean;
+}
+
+export interface MenuSection {
+  id: string;
+  name: string;
+  products: ProductCard[];
+}
+
+export interface MerchantPage {
+  merchant: MerchantInfo;
+  sections: MenuSection[];
 }
 
 export interface SearchRequest {

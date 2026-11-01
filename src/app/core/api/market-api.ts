@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiError, ApiProblem, GeoLocation, ProductCard, ProductDetail, SearchRequest, SearchResponse } from './contracts';
+import { ApiError, ApiProblem, GeoLocation, MerchantPage, ProductCard, ProductDetail, SearchRequest, SearchResponse } from './contracts';
 
 /**
  * Client of the MarketChat api-gateway. Every call goes through the gateway (never directly to a service);
@@ -22,6 +22,18 @@ export class MarketApi {
     let params = new HttpParams();
     if (location) params = params.set('lat', location.lat).set('lng', location.lng);
     return this.call(this.http.get<ProductDetail>(`${this.base}/api/catalog/products/${encodeURIComponent(productId)}`, { params }));
+  }
+
+  getMerchant(merchantId: string, location?: GeoLocation): Promise<MerchantPage> {
+    let params = new HttpParams();
+    if (location) params = params.set('lat', location.lat).set('lng', location.lng);
+    return this.call(this.http.get<MerchantPage>(`${this.base}/api/catalog/merchants/${encodeURIComponent(merchantId)}`, { params }));
+  }
+
+  /** Media paths returned by the API are relative to the gateway. */
+  mediaUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    return /^https?:\/\//.test(path) ? path : `${this.base}${path}`;
   }
 
   private async call<T>(request: import('rxjs').Observable<T>): Promise<T> {

@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+let scrollTriggerReady = false;
 
 /**
  * All GSAP animations in one place. Every animation is skipped when the user asked for reduced motion.
@@ -55,5 +58,25 @@ export class Motion {
   shake(el: Element | null): void {
     if (this.reduced || !el) return;
     gsap.fromTo(el, { x: 0 }, { x: 0, duration: 0.4, ease: 'none', keyframes: { x: [0, -8, 8, -5, 5, 0] } });
+  }
+
+  /** Cover photo moves slower than the page (parallax) and fades as you scroll. Returns a cleanup function. */
+  parallax(cover: HTMLElement): () => void {
+    if (this.reduced || typeof matchMedia === 'undefined') return () => undefined;
+    if (!scrollTriggerReady) { gsap.registerPlugin(ScrollTrigger); scrollTriggerReady = true; }
+    const tween = gsap.to(cover, {
+      yPercent: 25, scale: 1.08, opacity: 0.7, ease: 'none',
+      scrollTrigger: { trigger: cover, start: 'top top', end: 'bottom top', scrub: true },
+    });
+    return () => { tween.scrollTrigger?.kill(); tween.kill(); };
+  }
+
+  /** Merchant header and menu sections reveal. */
+  merchantIn(root: HTMLElement): void {
+    if (this.reduced) return;
+    gsap.from(root.querySelectorAll('[data-reveal]'), {
+      y: 22, opacity: 0, duration: 0.6, ease: 'power3.out', stagger: 0.07, clearProps: 'transform',
+    });
+    gsap.from(root.querySelectorAll('[data-logo]'), { scale: 0.6, rotate: -8, opacity: 0, duration: 0.7, ease: 'back.out(1.8)' });
   }
 }

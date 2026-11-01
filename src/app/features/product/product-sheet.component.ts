@@ -5,12 +5,14 @@ import { ApiError, GeoLocation, OptionGroup, ProductDetail } from '../../core/ap
 import { MarketApi } from '../../core/api/market-api';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Motion } from '../../shared/motion/motion.service';
+import { FoodImageComponent } from '../../shared/ui/food-image.component';
 import { SelectionState, initialSelection, missingGroups, previewUnitPrice, toggle } from './option-selection';
 
 /** Bottom sheet showing the real options of a product (GET /api/catalog/products/{id}). */
 @Component({
   selector: 'mc-product-sheet',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FoodImageComponent],
   template: `
     <div class="fixed inset-0 z-40 flex items-end justify-center" role="dialog" aria-modal="true" [attr.aria-label]="detail()?.product?.name ?? ''">
       <div #backdrop class="absolute inset-0 bg-ink/45 backdrop-blur-[2px]" (click)="close()"></div>
@@ -26,16 +28,13 @@ import { SelectionState, initialSelection, missingGroups, previewUnitPrice, togg
 
         @if (detail(); as d) {
           <div class="no-scrollbar overflow-y-auto">
-            <div class="relative grid h-48 place-items-center"
-                 [style.background]="'linear-gradient(135deg,' + d.product.visual.from + ',' + d.product.visual.to + ')'">
-              <span class="pointer-events-none absolute -start-10 -bottom-16 size-48 rounded-full bg-white/25 blur-3xl"></span>
-              <span class="text-[6.5rem] drop-shadow-[0_14px_24px_rgba(0,0,0,0.2)]" aria-hidden="true" data-sheet-item>{{ d.product.visual.emoji }}</span>
-            </div>
+            <mc-food-image class="h-56 w-full" [path]="d.product.imageUrl" [visual]="d.product.visual"
+                           [alt]="d.product.name" [eager]="true" emojiSize="6rem" data-sheet-item />
 
             <div class="space-y-5 px-5 pb-32 pt-5">
               <header data-sheet-item>
                 <h2 class="text-2xl font-extrabold tracking-tight">{{ d.product.name }}</h2>
-                <p class="mt-1 text-sm leading-relaxed text-muted">{{ d.description }}</p>
+                <p dir="auto" class="mt-1 text-start text-sm leading-relaxed text-muted">{{ d.description }}</p>
                 <p class="mt-3 flex flex-wrap items-center gap-2 text-xs font-medium text-ink-soft">
                   <span class="inline-flex items-center gap-1 rounded-full bg-canvas px-2.5 py-1">{{ d.product.merchant.emoji }} {{ d.product.merchant.name }}</span>
                   <span class="rounded-full bg-canvas px-2.5 py-1">⏱ <span dir="ltr">{{ d.product.etaText }}</span></span>

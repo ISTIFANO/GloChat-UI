@@ -25,8 +25,8 @@ const sauce: OptionGroup = {
 
 const detail = (groups: OptionGroup[]): ProductDetail => ({
   product: {
-    productId: 'p', name: 'Double Smash', shortDescription: '', visual: { emoji: '🍔', from: '#fff', to: '#000' },
-    price: 65, currency: 'MAD', merchant: { id: 'm', name: 'M', emoji: '🍔', cuisine: 'burger' }, distanceKm: 1,
+    productId: 'p', name: 'Double Smash', shortDescription: '', imageUrl: null, visual: { emoji: '🍔', from: '#fff', to: '#000' },
+    price: 65, currency: 'MAD', merchant: { id: 'm', name: 'M', emoji: '🍔', cuisine: 'burger', logoUrl: null }, distanceKm: 1,
     etaText: '10–20 min', deliveryFee: 11, tags: [], needsConfiguration: true, merchantOpen: true,
   },
   description: '',

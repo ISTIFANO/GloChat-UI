@@ -75,6 +75,48 @@ with sync_playwright() as p:
     check("arabic is right-to-left", lambda: expect(page.locator("html")).to_have_attribute("dir", "rtl"))
     check("arabic search finds burgers", lambda: expect(page.get_by_text("Double Smash Burger")).to_be_visible())
 
+    # photos load for real (served by the gateway, not broken)
+    check("product photos load", lambda: page.wait_for_function(
+        "() => [...document.querySelectorAll('[data-card] img')].some(i => i.complete && i.naturalWidth > 0)", timeout=10000))
+
+    # merchant page via the card's merchant link (back to French)
+    page.get_by_role("button", name="FR").click()
+    page.goto(BASE)
+    page.fill('input[name="q"]', "double smash")
+    page.get_by_role("button", name="Chercher").click()
+    page.wait_for_selector("[data-card]", timeout=15000)
+    page.locator('[data-card] a[href="/m/m-smash"]').first.click()
+    page.wait_for_selector("h1", timeout=15000)
+    page.wait_for_timeout(1200)
+    page.screenshot(path=os.path.join(OUT, "05-merchant.png"))
+    check("merchant page url", lambda: expect(page).to_have_url(BASE + "/m/m-smash"))
+    check("merchant page hit the gateway", lambda: [u for u in api_calls if "/api/catalog/merchants/m-smash" in u] or (_ for _ in ()).throw(AssertionError("no call")))
+    check("merchant name from DB", lambda: expect(page.locator("h1")).to_contain_text("Smash"))
+    check("menu sections rendered", lambda: expect(page.get_by_role("heading", name="Accompagnements")).to_be_visible())
+    check("logo and cover load", lambda: page.wait_for_function(
+        "() => [...document.querySelectorAll('img')].filter(i => i.complete && i.naturalWidth > 0).length >= 3", timeout=10000))
+    page.get_by_role("button", name="Boissons").click()
+    page.wait_for_timeout(1000)
+    page.screenshot(path=os.path.join(OUT, "06-merchant-scrolled.png"))
+    check("category tab scrolls to section", lambda: expect(page.get_by_role("heading", name="Boissons")).to_be_in_viewport())
+    page.get_by_role("button", name="Double Smash Burger").click()
+    page.wait_for_selector("text=Suppléments", timeout=15000)
+    page.wait_for_timeout(700)
+    page.screenshot(path=os.path.join(OUT, "07-merchant-sheet.png"))
+    check("menu row opens product sheet", lambda: expect(page.get_by_role("heading", name="Accompagnement", exact=True)).to_be_visible())
+    page.get_by_role("button", name="Fermer").click()
+    page.wait_for_timeout(500)
+
+    page.get_by_role("button", name="ع").click()
+    page.evaluate("window.scrollTo(0,0)")
+    page.wait_for_timeout(800)
+    page.screenshot(path=os.path.join(OUT, "08-merchant-arabic.png"))
+    check("merchant page in arabic", lambda: expect(page.get_by_text("التوصيل").first).to_be_visible())
+
+    page.goto(BASE + "/m/does-not-exist")
+    page.wait_for_timeout(1500)
+    check("unknown merchant message", lambda: expect(page.get_by_text("ما كاينش")).to_be_visible())
+
     browser.close()
 
 for status, name in results:
