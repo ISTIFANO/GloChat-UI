@@ -20,13 +20,7 @@ yarn-error.log
 .settings/
 *.sublime-workspace
 
-# Visual Studio Code
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/mcp.json
+# Visual Studio Code history
 .history/*
 
 # Miscellaneous
@@ -45,3 +39,18 @@ Thumbs.db
 
 # e2e artefacts
 e2e/screenshots/
+
+# Local configuration (generated / per machine) — see .env.example
+.env
+.env.*
+!.env.example
+public/config.json
+
+# Editor, AI-assistant and tooling files (not part of the product)
+.vscode/
+.claude/
+CLAUDE.md
+.cursor/
+__pycache__/
+*.pyc
+*.log

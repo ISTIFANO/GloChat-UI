@@ -1,15 +1,54 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="utf-8">
-  <title>MarketChat — commande en discutant</title>
+  <title>GloChat — commande en discutant</title>
   <meta name="theme-color" content="#5b3df5">
-  <meta name="description" content="MarketChat : dis ce que tu veux, l'assistant trouve et commande pour toi.">
+  <meta name="description" content="GloChat : dis ce que tu veux, l'assistant trouve et commande pour toi.">
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="glochat.svg">
+  <link rel="alternate icon" href="favicon.ico">
+  <style>
+    /* boot splash: visible until Angular renders <app-root> (keyframes duplicated so it animates before styles.css loads) */
+    .gc-splash { position: fixed; inset: 0; display: grid; place-content: center; justify-items: center; gap: 18px;
+      background: radial-gradient(60% 50% at 70% 20%, #e7e1ff 0, transparent 70%), radial-gradient(50% 40% at 20% 80%, #eefbc8 0, transparent 70%), #f7f5f0;
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .gc-splash .gc-box { position: relative; width: 84px; height: 84px; }
+    .gc-splash svg { width: 100%; height: 100%; overflow: visible; transform-origin: 50% 92%;
+      filter: drop-shadow(0 12px 22px rgb(91 61 245 / .35)); animation: gcs-hop 1.2s cubic-bezier(.45,0,.25,1) infinite; }
+    .gc-splash .gc-g { stroke-dasharray: 48; animation: gcs-draw 1.2s ease-in-out infinite; }
+    .gc-splash .gc-spark { transform-box: fill-box; transform-origin: center; animation: gcs-pulse 1.2s ease-in-out infinite; }
+    .gc-splash .gc-shadow { position: absolute; bottom: -10px; left: 30%; width: 40%; height: 8px; border-radius: 50%;
+      background: rgb(22 19 31 / .18); animation: gcs-shadow 1.2s cubic-bezier(.45,0,.25,1) infinite; }
+    .gc-splash .gc-word { font-size: 26px; font-weight: 800; letter-spacing: -.04em; color: #16131f; }
+    .gc-splash .gc-word b { color: #5b3df5; }
+    @keyframes gcs-hop { 0%,100% { transform: translateY(0) scale(1,1) } 12% { transform: scale(1.06,.92) } 45% { transform: translateY(-16px) scale(.97,1.04) } 75% { transform: scale(1.04,.95) } }
+    @keyframes gcs-draw { 0% { stroke-dashoffset: 48 } 45%,70% { stroke-dashoffset: 0 } 100% { stroke-dashoffset: -48 } }
+    @keyframes gcs-pulse { 0%,100% { transform: scale(1) } 45% { transform: scale(1.35) } }
+    @keyframes gcs-shadow { 0%,100% { transform: scale(1); opacity: 1 } 45% { transform: scale(.6); opacity: .45 } }
+    @media (prefers-reduced-motion: reduce) { .gc-splash * { animation: none !important } }
+  </style>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <div class="gc-splash" role="status" aria-label="GloChat">
+      <div class="gc-box">
+        <span class="gc-shadow"></span>
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <defs>
+            <linearGradient id="gcs-b" x1="9" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#8f73ff"/><stop offset=".55" stop-color="#5b3df5"/><stop offset="1" stop-color="#3a1fc4"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#gcs-b)" d="M24 3.5c10.2 0 18 7.4 18 17.2 0 9.6-7.6 15.4-15 21.6l-3 2.6-3-2.6C13.6 36.1 6 30.3 6 20.7 6 10.9 13.8 3.5 24 3.5Z"/>
+          <path fill="#fff" fill-opacity=".14" d="M24 5.5c-8.9 0-15.8 6.3-16 14.8 3.5-6.6 9.4-10.3 16-10.3 3.4 0 6.6.9 9.3 2.6A16.5 16.5 0 0 0 24 5.5Z"/>
+          <path class="gc-g" fill="none" stroke="#fff" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" d="M30.1 15.4A8 8 0 1 0 32 20.5H25"/>
+          <circle class="gc-spark" cx="34.5" cy="11.5" r="2.9" fill="#c8f23b"/>
+        </svg>
+      </div>
+      <span class="gc-word">glo<b>chat</b></span>
+    </div>
+  </app-root>
 </body>
 </html>
