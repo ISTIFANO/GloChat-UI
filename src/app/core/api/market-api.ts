@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiError, ApiProblem, GeoLocation, MerchantPage, ProductCard, ProductDetail, SearchRequest, SearchResponse } from './contracts';
+import { ApiError, ApiProblem, GeoLocation, MerchantInfo, MerchantPage, ProductCard, ProductDetail, SearchRequest, SearchResponse } from './contracts';
 
 /**
  * Client of the MarketChat api-gateway. Every call goes through the gateway (never directly to a service);
@@ -28,6 +28,14 @@ export class MarketApi {
     let params = new HttpParams();
     if (location) params = params.set('lat', location.lat).set('lng', location.lng);
     return this.call(this.http.get<MerchantPage>(`${this.base}/api/catalog/merchants/${encodeURIComponent(merchantId)}`, { params }));
+  }
+
+  /** Every restaurant with its delivery terms for the location, open ones first (home carousel). */
+  async listMerchants(location?: GeoLocation): Promise<MerchantInfo[]> {
+    let params = new HttpParams();
+    if (location) params = params.set('lat', location.lat).set('lng', location.lng);
+    const res = await this.call(this.http.get<{ merchants: MerchantInfo[] }>(`${this.base}/api/catalog/merchants`, { params }));
+    return res.merchants;
   }
 
   /** Media paths returned by the API are relative to the gateway. */

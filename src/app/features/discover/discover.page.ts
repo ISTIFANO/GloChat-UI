@@ -11,6 +11,7 @@ import { LoginPrompt } from '../../core/auth/login-prompt.service';
 import { Motion } from '../../shared/motion/motion.service';
 import { ProductCardComponent } from '../product/product-card.component';
 import { ProductSheetComponent } from '../product/product-sheet.component';
+import { MerchantCarouselComponent } from './merchant-carousel.component';
 import { parseQuery } from './query-parser';
 
 interface Suggestion {
@@ -22,7 +23,7 @@ interface Suggestion {
 @Component({
   selector: 'mc-discover',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, FormsModule, ProductCardComponent, ProductSheetComponent],
+  imports: [MerchantCarouselComponent, IconComponent, FormsModule, ProductCardComponent, ProductSheetComponent],
   template: `
     <section #hero class="px-5 pb-4 pt-6">
       <p data-hero class="inline-flex items-center gap-2 rounded-full bg-zest-300/70 px-3 py-1 text-xs font-bold text-ink">
@@ -60,7 +61,7 @@ interface Suggestion {
       </div>
     </section>
 
-    <section class="px-5 pb-28" aria-live="polite">
+    <section class="px-5" [class.pb-6]="searched()" aria-live="polite">
       @if (loading()) {
         <div class="grid grid-cols-2 gap-3" aria-busy="true">
           @for (i of [1, 2, 3, 4]; track i) {
@@ -100,6 +101,11 @@ interface Suggestion {
         }
       }
     </section>
+
+    <!-- every restaurant, swipeable, at the bottom of the shop -->
+    <div class="-mx-0 pb-10">
+      <mc-merchant-carousel [location]="location" />
+    </div>
 
     @if (openProductId(); as id) {
       <mc-product-sheet [productId]="id" [location]="location" (closed)="openProductId.set(null)" />

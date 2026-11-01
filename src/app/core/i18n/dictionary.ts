@@ -170,5 +170,9 @@ export const DICTIONARY: Record<string, Entry> = {
   'login.popupHint': { fr: 'Termine la connexion dans la petite fenêtre, on t’attend ici.', ar: 'كمل الدخول فالنافذة الصغيرة، حنا هنا.', en: 'Finish signing in in the small window, we’ll wait here.' },
   'login.failed': { fr: 'La connexion n’a pas abouti. Réessaie.', ar: 'الدخول ما دازش. عاود.', en: 'Sign-in didn’t complete. Try again.' },
   'login.legal': { fr: 'Connexion sécurisée. Nous ne voyons jamais ton mot de passe.', ar: 'دخول مأمن. ما كنشوفوش كلمة السر ديالك.', en: 'Secure sign-in. We never see your password.' },
+  'home.restaurants': { fr: 'Restaurants près de toi', ar: 'المطاعم قريبة منك', en: 'Restaurants near you' },
+  'home.restaurantsCount': { fr: '{n} adresses · {open} ouvertes maintenant', ar: '{n} عناوين · {open} محلولين دابا', en: '{n} places · {open} open now' },
+  'home.prev': { fr: 'Précédent', ar: 'السابق', en: 'Previous' },
+  'home.next': { fr: 'Suivant', ar: 'التالي', en: 'Next' },
   'lang.label': { fr: 'Langue', ar: 'اللغة', en: 'Language' },
 };
