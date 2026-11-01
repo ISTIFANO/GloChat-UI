@@ -2,6 +2,8 @@ import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { environment } from '../environments/environment';
 import { Lang } from './core/api/contracts';
 import { I18n } from './core/i18n/i18n.service';
+import { AuthService } from './core/auth/auth.service';
+import { CartStore } from './core/cart/cart.store';
 import { RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
@@ -24,8 +26,8 @@ import { RouterLink, RouterOutlet } from '@angular/router';
           <span class="hidden text-lg font-extrabold tracking-tight min-[420px]:inline">market<span class="text-iris-500">chat</span></span>
         </a>
 
-        <div class="flex items-center gap-2">
-          <button type="button" class="chip max-w-[9.5rem] !py-1.5 !text-xs" [attr.aria-label]="i18n.t('header.deliverTo') + ' ' + locationLabel">
+        <div class="flex items-center gap-1.5">
+          <button type="button" class="chip hidden max-w-[8.5rem] !py-1.5 !text-xs min-[430px]:inline-flex" [attr.aria-label]="i18n.t('header.deliverTo') + ' ' + locationLabel">
             <svg viewBox="0 0 20 20" class="size-3.5 text-iris-500" aria-hidden="true"><path fill="currentColor" d="M10 1.5a6 6 0 0 0-6 6c0 4.4 6 11 6 11s6-6.6 6-11a6 6 0 0 0-6-6Zm0 8.2a2.2 2.2 0 1 1 0-4.4 2.2 2.2 0 0 1 0 4.4Z"/></svg>
             <span class="truncate">{{ locationLabel }}</span>
           </button>
@@ -37,6 +39,23 @@ import { RouterLink, RouterOutlet } from '@angular/router';
                       (click)="i18n.lang.set(l.code)">{{ l.label }}</button>
             }
           </div>
+          @if (auth.user(); as u) {
+            <a routerLink="/orders" class="grid size-9 place-items-center rounded-full bg-zest-300 text-sm font-extrabold text-ink ring-2 ring-surface"
+               [attr.aria-label]="i18n.t('header.account')" data-account>{{ u.initial }}</a>
+          } @else {
+            <button type="button" class="grid size-9 place-items-center rounded-full bg-surface text-ink ring-1 ring-line transition hover:ring-iris-200"
+                    [attr.aria-label]="i18n.t('header.login')" (click)="login()" data-login>
+              <svg viewBox="0 0 20 20" class="size-4" aria-hidden="true"><path fill="currentColor" d="M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8c0-3.3 3.1-6 7-6s7 2.7 7 6H3Z"/></svg>
+            </button>
+          }
+          <a routerLink="/cart" data-cart-button class="relative grid size-9 place-items-center rounded-full bg-ink text-white shadow-soft transition active:scale-95"
+             [attr.aria-label]="i18n.t('header.cart') + (cart.count() ? ' (' + cart.count() + ')' : '')">
+            <svg viewBox="0 0 24 24" class="size-[1.15rem]" aria-hidden="true"><path fill="currentColor" d="M7 4h13l-1.6 8.1a2 2 0 0 1-2 1.6H9.1L9.5 16H19v2H8a1 1 0 0 1-1-.8L4.6 4H2V2h3.4a1 1 0 0 1 1 .8L7 4Zm2 17a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3Z"/></svg>
+            @if (cart.count() > 0) {
+              <span class="absolute -end-1 -top-1 grid min-w-5 place-items-center rounded-full bg-zest-300 px-1 text-[0.65rem] font-extrabold text-ink ring-2 ring-canvas"
+                    data-cart-count>{{ cart.count() }}</span>
+            }
+          </a>
         </div>
       </header>
 
@@ -48,7 +67,13 @@ import { RouterLink, RouterOutlet } from '@angular/router';
 })
 export class App {
   readonly i18n = inject(I18n);
+  readonly auth = inject(AuthService);
+  readonly cart = inject(CartStore);
   readonly locationLabel = environment.defaultLocation.label;
+  login(): void {
+    void this.auth.login(location.pathname + location.search, this.i18n.lang());
+  }
+
   readonly langs: { code: Lang; label: string }[] = [
     { code: 'fr', label: 'FR' },
     { code: 'ar', label: 'ع' },

@@ -60,8 +60,6 @@ with sync_playwright() as p:
     page.wait_for_timeout(500)
     check("live price = 65 + 12 + 10 = 87", lambda: expect(page.get_by_role("button", name="Ajouter · 87 MAD")).to_be_visible())
     page.screenshot(path=os.path.join(OUT, "03-product-sheet.png"))
-    page.get_by_role("button", name="Ajouter · 87 MAD").click()
-    check("no fake cart success", lambda: expect(page.get_by_text("Le panier arrive")).to_be_visible())
     page.get_by_role("button", name="Fermer").click()
     page.wait_for_timeout(500)
 

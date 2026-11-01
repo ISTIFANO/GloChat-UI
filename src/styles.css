@@ -84,6 +84,10 @@
   .card {
     @apply rounded-[var(--radius-card)] bg-surface shadow-soft ring-1 ring-line/70;
   }
+  .field {
+    @apply w-full rounded-2xl bg-canvas px-4 py-3 text-sm text-ink ring-1 ring-line outline-none transition
+      placeholder:text-muted focus:bg-surface focus:ring-2 focus:ring-iris-400;
+  }
   .no-scrollbar {
     scrollbar-width: none;
   }

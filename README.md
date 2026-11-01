@@ -17,3 +17,15 @@ Angular 21 (standalone, signals, zoneless) · Tailwind CSS 4 · GSAP 3 · Vitest
 
 ## Configuration
 `src/environments/environment.ts` holds **public** values only (gateway URL, Keycloak issuer/client, Stripe publishable key).
+
+## Cart, checkout and payment (Inc 2-4)
+
+- Login: Keycloak, Authorization Code + PKCE (`core/auth`), public client `marketchat-app`, no secret in the bundle.
+  Tokens in `sessionStorage` (they survive the Stripe redirect, end with the tab).
+- Cart, checkout and orders call the gateway (`core/api/shop-api.ts`); prices always come from the backend.
+- Card payment: Stripe-hosted Checkout. Back on `/orders/:number?payment=success` the app asks the backend to verify
+  the payment with Stripe server-to-server; the redirect alone is never trusted.
+
+```bash
+python e2e/checkout.e2e.py http://localhost:4200   # login, cart, cash order, real Stripe test payment (card 4242)
+```
