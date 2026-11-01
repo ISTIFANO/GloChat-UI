@@ -3,6 +3,7 @@ import {
 } from '@angular/core';
 import { ApiError, GeoLocation, OptionGroup, ProductDetail } from '../../core/api/contracts';
 import { MarketApi } from '../../core/api/market-api';
+import { CartStore } from '../../core/cart/cart.store';
 import { I18n } from '../../core/i18n/i18n.service';
 import { Motion } from '../../shared/motion/motion.service';
 import { FoodImageComponent } from '../../shared/ui/food-image.component';
@@ -28,7 +29,7 @@ import { SelectionState, initialSelection, missingGroups, previewUnitPrice, togg
 
         @if (detail(); as d) {
           <div class="no-scrollbar overflow-y-auto">
-            <mc-food-image class="h-56 w-full" [path]="d.product.imageUrl" [visual]="d.product.visual"
+            <mc-food-image #hero class="h-56 w-full" [path]="d.product.imageUrl" [visual]="d.product.visual"
                            [alt]="d.product.name" [eager]="true" emojiSize="6rem" data-sheet-item />
 
             <div class="space-y-5 px-5 pb-32 pt-5">
@@ -89,10 +90,18 @@ import { SelectionState, initialSelection, missingGroups, previewUnitPrice, togg
           </div>
 
           <footer class="absolute inset-x-0 bottom-0 border-t border-line bg-surface/95 px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
-            @if (notice()) {
+            @if (conflict(); as m) {
+              <div class="mb-2 rounded-2xl bg-ink px-4 py-3 text-sm text-white" role="alertdialog" aria-live="assertive">
+                <p class="font-semibold">{{ i18n.t('sheet.conflict', { m }) }}</p>
+                <div class="mt-2 flex gap-2">
+                  <button type="button" class="flex-1 rounded-full bg-white/15 px-3 py-2 text-xs font-bold" (click)="conflict.set(null)">{{ i18n.t('sheet.keep') }}</button>
+                  <button type="button" class="flex-1 rounded-full bg-zest-300 px-3 py-2 text-xs font-bold text-ink" (click)="startNewCart()">{{ i18n.t('sheet.newCart') }}</button>
+                </div>
+              </div>
+            } @else if (notice()) {
               <p class="mb-2 rounded-xl bg-zest-300/70 px-3 py-2 text-center text-xs font-semibold text-ink" role="status">{{ notice() }}</p>
             }
-            <button #cta type="button" class="btn-primary w-full text-base" (click)="addToCart()">
+            <button #cta type="button" class="btn-primary w-full text-base" [disabled]="adding()" (click)="addToCart()">
               @if (missing().length > 0) {
                 {{ i18n.t('sheet.missing', { groups: missingNames() }) }}
               } @else {
@@ -127,6 +136,10 @@ export class ProductSheetComponent {
   private readonly backdrop = viewChild.required<ElementRef<HTMLElement>>('backdrop');
   private readonly qtyEl = viewChild<ElementRef<HTMLElement>>('qty');
   private readonly cta = viewChild<ElementRef<HTMLElement>>('cta');
+  private readonly hero = viewChild('hero', { read: ElementRef });
+  private readonly cart = inject(CartStore);
+  readonly adding = signal(false);
+  readonly conflict = signal<string | null>(null);
 
   readonly detail = signal<ProductDetail | null>(null);
   readonly error = signal<string | null>(null);
@@ -177,14 +190,54 @@ export class ProductSheetComponent {
     this.motion.pop(this.qtyEl()?.nativeElement ?? null);
   }
 
-  addToCart(): void {
+  /** The backend validates and prices the line; we only send ids. */
+  private request() {
+    const optionValueIds = [...this.selection().values()].flatMap((set) => [...set]);
+    return { productId: this.productId(), quantity: this.quantity(), optionValueIds };
+  }
+
+  async addToCart(): Promise<void> {
     if (this.missing().length > 0) {
       this.motion.shake(this.cta()?.nativeElement ?? null);
       return;
     }
-    // Cart endpoints arrive in Inc 2: no fake success, we say it honestly.
-    this.notice.set(this.i18n.t('sheet.cartSoon'));
-    this.motion.pop(this.cta()?.nativeElement ?? null);
+    this.adding.set(true);
+    this.notice.set(null);
+    try {
+      const result = await this.cart.add(this.request());
+      if (result.kind === 'conflict') {
+        this.conflict.set(result.currentMerchant || '…');
+      } else if (result.kind === 'added') {
+        await this.flyAndClose();
+      }
+    } catch (e) {
+      this.motion.shake(this.cta()?.nativeElement ?? null);
+      this.notice.set(e instanceof ApiError && e.code === 'NETWORK_ERROR'
+        ? this.i18n.t('error.network')
+        : this.i18n.t('error.generic', { code: e instanceof ApiError ? e.code : 'UNKNOWN' }));
+    } finally {
+      this.adding.set(false);
+    }
+  }
+
+  async startNewCart(): Promise<void> {
+    this.conflict.set(null);
+    this.adding.set(true);
+    try {
+      await this.cart.replaceWith(this.request());
+      await this.flyAndClose();
+    } catch (e) {
+      this.notice.set(this.i18n.t('error.generic', { code: e instanceof ApiError ? e.code : 'UNKNOWN' }));
+    } finally {
+      this.adding.set(false);
+    }
+  }
+
+  private async flyAndClose(): Promise<void> {
+    this.notice.set(this.i18n.t('sheet.added'));
+    const fly = this.motion.flyToCart(this.hero()?.nativeElement ?? null, this.detail()?.product.visual.emoji ?? '🛍️');
+    await this.close();
+    await fly;
   }
 
   async close(): Promise<void> {

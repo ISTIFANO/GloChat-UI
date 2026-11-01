@@ -71,6 +71,76 @@ export class Motion {
     return () => { tween.scrollTrigger?.kill(); tween.kill(); };
   }
 
+  /**
+   * "Fly to cart": a copy of the product picture arcs from where it was added to the cart button,
+   * shrinking as it goes, then the button bounces. Resolves when the flight ends.
+   */
+  flyToCart(from: Element | null, emoji: string): Promise<void> {
+    const target = document.querySelector('[data-cart-button]');
+    if (this.reduced || !from || !target) {
+      this.pop(target);
+      return Promise.resolve();
+    }
+    const a = from.getBoundingClientRect();
+    const b = target.getBoundingClientRect();
+    const size = Math.min(140, Math.max(56, a.width * 0.45));
+    const img = from.querySelector('img');
+    const ghost = document.createElement('div');
+    ghost.setAttribute('aria-hidden', 'true');
+    Object.assign(ghost.style, {
+      position: 'fixed', zIndex: '60', left: `${a.left + a.width / 2 - size / 2}px`, top: `${a.top + a.height / 2 - size / 2}px`,
+      width: `${size}px`, height: `${size}px`, borderRadius: '999px', overflow: 'hidden', pointerEvents: 'none',
+      boxShadow: '0 18px 40px -12px rgba(43,24,140,.55)', background: '#5b3df5', display: 'grid', placeItems: 'center',
+      fontSize: `${size * 0.5}px`,
+    } satisfies Partial<CSSStyleDeclaration>);
+    if (img && img.complete && img.naturalWidth > 0) {
+      const copy = img.cloneNode() as HTMLImageElement;
+      Object.assign(copy.style, { width: '100%', height: '100%', objectFit: 'cover', opacity: '1' });
+      copy.className = '';
+      ghost.appendChild(copy);
+    } else {
+      ghost.textContent = emoji;
+    }
+    document.body.appendChild(ghost);
+    const dx = b.left + b.width / 2 - (a.left + a.width / 2);
+    const dy = b.top + b.height / 2 - (a.top + a.height / 2);
+    return new Promise((resolve) => {
+      gsap.timeline({
+        onComplete: () => {
+          ghost.remove();
+          gsap.fromTo(target, { scale: 1.25 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1.2, 0.4)' });
+          resolve();
+        },
+      })
+        .to(ghost, { duration: 0.75, x: dx, ease: 'power1.inOut' }, 0)
+        .to(ghost, { duration: 0.75, y: dy, ease: 'back.in(1.6)' }, 0)
+        .to(ghost, { duration: 0.75, scale: 0.18, ease: 'power2.in' }, 0)
+        .to(ghost, { duration: 0.15, opacity: 0 }, 0.6);
+    });
+  }
+
+  /** Small celebration when an order is placed: confetti bits burst from an element. */
+  celebrate(origin: Element | null): void {
+    if (this.reduced || !origin) return;
+    const r = origin.getBoundingClientRect();
+    const colors = ['#5b3df5', '#c8f23b', '#ff7a59', '#16131f', '#9d8bff'];
+    for (let i = 0; i < 28; i++) {
+      const bit = document.createElement('span');
+      bit.setAttribute('aria-hidden', 'true');
+      Object.assign(bit.style, {
+        position: 'fixed', zIndex: '60', left: `${r.left + r.width / 2}px`, top: `${r.top + r.height / 2}px`,
+        width: `${6 + (i % 3) * 3}px`, height: `${10 + (i % 4) * 2}px`, borderRadius: '3px', pointerEvents: 'none',
+        background: colors[i % colors.length],
+      } satisfies Partial<CSSStyleDeclaration>);
+      document.body.appendChild(bit);
+      const angle = (Math.PI * 2 * i) / 28 + Math.random() * 0.4;
+      const dist = 90 + Math.random() * 110;
+      gsap.timeline({ onComplete: () => bit.remove() })
+        .to(bit, { x: Math.cos(angle) * dist, y: Math.sin(angle) * dist - 60, rotate: Math.random() * 540, duration: 0.7, ease: 'power3.out' })
+        .to(bit, { y: `+=${120 + Math.random() * 80}`, opacity: 0, duration: 0.9, ease: 'power1.in' });
+    }
+  }
+
   /** Merchant header and menu sections reveal. */
   merchantIn(root: HTMLElement): void {
     if (this.reduced) return;
