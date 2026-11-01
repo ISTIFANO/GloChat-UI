@@ -8,7 +8,9 @@ import sys
 
 from playwright.sync_api import expect, sync_playwright
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4200"
+from settings import web_base_url
+
+BASE = web_base_url()
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "screenshots")
 os.makedirs(OUT, exist_ok=True)
 results = []

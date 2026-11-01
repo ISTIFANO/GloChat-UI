@@ -2,7 +2,7 @@
 End-to-end check of the web app against the REAL backend (gateway -> commerce-service -> PostgreSQL).
 No mock: the products shown come from the database.
 
-Usage:  python e2e/catalog.e2e.py [base_url]   (default http://localhost:4200)
+Usage:  python e2e/catalog.e2e.py [base_url]   (default: WEB_BASE_URL from the environment or .env)
 Writes mobile screenshots to e2e/screenshots/.
 """
 import os
@@ -10,7 +10,9 @@ import sys
 
 from playwright.sync_api import expect, sync_playwright
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:4200"
+from settings import web_base_url
+
+BASE = web_base_url()
 OUT = os.path.join(os.path.dirname(__file__), "screenshots")
 os.makedirs(OUT, exist_ok=True)
 
